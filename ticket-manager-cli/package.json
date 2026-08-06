@@ -1,0 +1,20 @@
+{
+  "name": "ticket-manager-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ticket Manager CLI — built with TDD (Week 2)",
+  "bin": {
+    "tickets": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test",
+    "test:unit": "node --test tests/unit",
+    "test:integration": "node --test tests/integration",
+    "test:e2e": "node --test tests/e2e"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

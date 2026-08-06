@@ -1,0 +1,4 @@
+# Chỉ theo dõi thư mục ticket-manager-cli
+/*
+!/.gitignore
+!/ticket-manager-cli/
