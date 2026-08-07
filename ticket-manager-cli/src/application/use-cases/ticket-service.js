@@ -9,7 +9,7 @@ import {
   validateTicketId,
   validateUpdateTicketInput,
 } from '../../domain/tickets/ticket.js'
-import { assertTicketRepository } from '../ports/ticket-repository.js'
+import { assertTicketRepository } from '../ports/ticket-repository-outbound-port.js'
 
 export class TicketService {
   constructor(ticketRepository, options = {}) {

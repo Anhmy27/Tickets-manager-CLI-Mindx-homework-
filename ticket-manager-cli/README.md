@@ -38,6 +38,9 @@ User / Terminal
 Inbound Adapter: CLI
     |
     v
+Inbound Port: Ticket use cases
+    |
+    v
 Application: TicketService
     |
     v
@@ -54,7 +57,7 @@ Outbound Adapter: JSON file storage
 
 - `domain/`: chứa lõi nghiệp vụ của ticket, gồm `Ticket` entity, validation rules và domain errors.
 - `application/`: chứa use case `TicketService`, điều phối luồng tạo/list/show/update ticket.
-- `application/ports/`: định nghĩa port mà application cần để lưu và đọc ticket.
+- `application/ports/`: định nghĩa inbound port cho use case và outbound port cho repository.
 - `adapters/inbound/cli/`: nhận command từ terminal, parse arguments, gọi application service.
 - `adapters/outbound/json/`: hiện thực repository bằng file JSON.
 
@@ -68,7 +71,8 @@ ticket-manager-cli/
 │   │   ├── shared/errors.js
 │   │   └── tickets/ticket.js
 │   ├── application/
-│   │   ├── ports/ticket-repository.js
+│   │   ├── ports/ticket-repository-outbound-port.js
+│   │   ├── ports/ticket-use-cases-inbound-port.js
 │   │   └── use-cases/ticket-service.js
 │   └── adapters/
 │       ├── inbound/cli/ticket-cli-controller.js

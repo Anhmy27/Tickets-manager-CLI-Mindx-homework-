@@ -9,27 +9,30 @@ import {
   StorageError,
   ValidationError,
 } from '../../../domain/shared/errors.js'
+import { assertTicketUseCases } from '../../../application/ports/ticket-use-cases-inbound-port.js'
 import { TicketService } from '../../../application/use-cases/ticket-service.js'
 import { JsonTicketRepository } from '../../outbound/json/json-ticket-repository.js'
 
-export async function runCli(argv, io = {}) {
+export async function runCli(argv, io = {}, dependencies = {}) {
   const stdout = io.stdout ?? process.stdout
   const stderr = io.stderr ?? process.stderr
 
   try {
     const parsed = parseCliArguments(argv)
-    const repository = new JsonTicketRepository(resolve(parsed.dataFile))
-    const service = new TicketService(repository)
+    const ticketUseCases =
+      dependencies.ticketUseCases ?? createDefaultTicketUseCases(parsed.dataFile)
+
+    assertTicketUseCases(ticketUseCases)
 
     switch (parsed.command) {
       case 'create':
-        return await handleCreate(parsed, service, stdout)
+        return await handleCreate(parsed, ticketUseCases, stdout)
       case 'list':
-        return await handleList(parsed, service, stdout)
+        return await handleList(parsed, ticketUseCases, stdout)
       case 'show':
-        return await handleShow(parsed, service, stdout)
+        return await handleShow(parsed, ticketUseCases, stdout)
       case 'update':
-        return await handleUpdate(parsed, service, stdout)
+        return await handleUpdate(parsed, ticketUseCases, stdout)
       default:
         throw new ValidationError(
           'Unknown command. Use one of: create, list, show, update'
@@ -48,6 +51,11 @@ export async function runCli(argv, io = {}) {
     stderr.write(`Unexpected error: ${error.message}\n`)
     return 1
   }
+}
+
+function createDefaultTicketUseCases(dataFile) {
+  const repository = new JsonTicketRepository(resolve(dataFile))
+  return new TicketService(repository)
 }
 
 export function parseCliArguments(argv = []) {
@@ -85,8 +93,8 @@ export function parseCliArguments(argv = []) {
   }
 }
 
-async function handleCreate(parsed, service, stdout) {
-  const createdTicket = await service.createTicket({
+async function handleCreate(parsed, ticketUseCases, stdout) {
+  const createdTicket = await ticketUseCases.createTicket({
     title: parsed.flags.title,
     description: parsed.flags.description,
     status: parsed.flags.status,
@@ -99,8 +107,8 @@ async function handleCreate(parsed, service, stdout) {
   return 0
 }
 
-async function handleList(parsed, service, stdout) {
-  const tickets = await service.listTickets({
+async function handleList(parsed, ticketUseCases, stdout) {
+  const tickets = await ticketUseCases.listTickets({
     status: parsed.flags.status,
     priority: parsed.flags.priority,
     tags: parsed.flags.tags,
@@ -110,15 +118,15 @@ async function handleList(parsed, service, stdout) {
   return 0
 }
 
-async function handleShow(parsed, service, stdout) {
-  const ticket = await service.showTicket(parsed.positionals[0])
+async function handleShow(parsed, ticketUseCases, stdout) {
+  const ticket = await ticketUseCases.showTicket(parsed.positionals[0])
 
   stdout.write(`${JSON.stringify(ticket, null, 2)}\n`)
   return 0
 }
 
-async function handleUpdate(parsed, service, stdout) {
-  const updatedTicket = await service.updateTicket(parsed.positionals[0], {
+async function handleUpdate(parsed, ticketUseCases, stdout) {
+  const updatedTicket = await ticketUseCases.updateTicket(parsed.positionals[0], {
     status: parsed.flags.status,
   })
 
