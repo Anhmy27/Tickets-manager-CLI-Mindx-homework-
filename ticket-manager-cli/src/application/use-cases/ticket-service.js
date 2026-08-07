@@ -4,7 +4,7 @@
 
 import { NotFoundError } from '../../domain/shared/errors.js'
 import {
-  validateCreateTicketInput,
+  Ticket,
   validateListFilters,
   validateTicketId,
   validateUpdateTicketInput,
@@ -21,16 +21,12 @@ export class TicketService {
   }
 
   async createTicket(input) {
-    const validatedInput = validateCreateTicketInput(input)
-    const tickets = await this.ticketRepository.loadTickets()
-    const timestamp = this.now()
-
-    const createdTicket = {
+    const createdTicket = Ticket.create({
       id: this.idGenerator(),
-      ...validatedInput,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    }
+      input,
+      timestamp: this.now(),
+    }).toJSON()
+    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
 
     await this.ticketRepository.saveTickets([...tickets, createdTicket])
 
@@ -39,14 +35,14 @@ export class TicketService {
 
   async listTickets(filters = {}) {
     const validatedFilters = validateListFilters(filters)
-    const tickets = await this.ticketRepository.loadTickets()
+    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
 
     return tickets.filter((ticket) => matchesFilters(ticket, validatedFilters))
   }
 
   async showTicket(id) {
     const validatedId = validateTicketId(id)
-    const tickets = await this.ticketRepository.loadTickets()
+    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
     const ticket = tickets.find((item) => item.id === validatedId)
 
     if (!ticket) {
@@ -58,19 +54,17 @@ export class TicketService {
 
   async updateTicket(id, input) {
     const validatedId = validateTicketId(id)
-    const validatedInput = validateUpdateTicketInput(input)
-    const tickets = await this.ticketRepository.loadTickets()
+    validateUpdateTicketInput(input)
+    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
     const index = tickets.findIndex((item) => item.id === validatedId)
 
     if (index < 0) {
       throw new NotFoundError(`Ticket ${validatedId} not found`)
     }
 
-    const updatedTicket = {
-      ...tickets[index],
-      status: validatedInput.status,
-      updatedAt: this.now(),
-    }
+    const updatedTicket = Ticket.fromPersistence(tickets[index])
+      .updateStatus(input, this.now())
+      .toJSON()
 
     const updatedTickets = [...tickets]
     updatedTickets[index] = updatedTicket
@@ -83,6 +77,10 @@ export class TicketService {
 
 function createDefaultId() {
   return `ticket-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function hydrateTickets(tickets) {
+  return tickets.map((ticket) => Ticket.fromPersistence(ticket).toJSON())
 }
 
 function matchesFilters(ticket, filters) {

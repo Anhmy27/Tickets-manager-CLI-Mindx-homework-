@@ -7,6 +7,74 @@ import { ValidationError } from '../shared/errors.js'
 export const TICKET_STATUSES = ['open', 'in_progress', 'closed']
 export const TICKET_PRIORITIES = ['low', 'medium', 'high']
 
+export class Ticket {
+  constructor({
+    id,
+    title,
+    description,
+    status,
+    priority,
+    tags,
+    createdAt,
+    updatedAt,
+  }) {
+    const validatedInput = validateCreateTicketInput({
+      title,
+      description,
+      status,
+      priority,
+      tags,
+    })
+
+    this.id = validateTicketId(id)
+    this.title = validatedInput.title
+    this.description = validatedInput.description
+    this.status = validatedInput.status
+    this.priority = validatedInput.priority
+    this.tags = validatedInput.tags
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
+  }
+
+  static create({ id, input, timestamp }) {
+    const validatedInput = validateCreateTicketInput(input)
+
+    return new Ticket({
+      id,
+      ...validatedInput,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    })
+  }
+
+  static fromPersistence(data) {
+    return new Ticket(data)
+  }
+
+  updateStatus(input, timestamp) {
+    const validatedInput = validateUpdateTicketInput(input)
+
+    return new Ticket({
+      ...this.toJSON(),
+      status: validatedInput.status,
+      updatedAt: timestamp,
+    })
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      title: this.title,
+      description: this.description,
+      status: this.status,
+      priority: this.priority,
+      tags: this.tags,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    }
+  }
+}
+
 export function validateCreateTicketInput(input = {}) {
   const title = normalizeRequiredText(input.title, 'title is required')
   const description = normalizeOptionalText(input.description)
