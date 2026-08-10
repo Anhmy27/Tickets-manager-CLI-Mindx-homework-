@@ -1,4 +1,5 @@
-# Chỉ theo dõi thư mục ticket-manager-cli
+# Chỉ theo dõi thư mục bài làm và tài liệu research AI
 /*
 !/.gitignore
 !/ticket-manager-cli/
+!/research-and-ai-implementation/
