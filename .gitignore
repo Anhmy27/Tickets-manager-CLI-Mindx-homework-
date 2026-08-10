@@ -1,5 +1,6 @@
-# Chỉ theo dõi thư mục bài làm và tài liệu research AI
+# Chỉ theo dõi thư mục bài làm, tài liệu research AI, và README GitHub
 /*
 !/.gitignore
+!/README.md
 !/ticket-manager-cli/
 !/research-and-ai-implementation/
