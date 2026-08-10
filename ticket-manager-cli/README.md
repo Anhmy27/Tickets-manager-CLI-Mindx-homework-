@@ -15,7 +15,7 @@ npm test
 Kết quả mong đợi:
 
 ```text
-42 pass / 0 fail
+44 pass / 0 fail
 ```
 
 ## Chức Năng Chính
@@ -136,6 +136,8 @@ Các field hỗ trợ:
 - `--status`: `open`, `in_progress`, `closed`
 - `--priority`: `low`, `medium`, `high`
 - `--tags`: danh sách tag, phân tách bằng dấu phẩy
+
+Command và option name không phân biệt chữ hoa/thường. Ví dụ `CREATE`, `create`, `--TITLE`, `--title` đều được parser hiểu đúng. Giá trị của `status` và `priority` cũng được normalize về chữ thường.
 
 Giá trị mặc định:
 

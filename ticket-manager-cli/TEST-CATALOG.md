@@ -2,20 +2,20 @@
 
 Mục tiêu file này: cho bạn nhìn nhanh **hàm nào**, **đầu vào gì**, **mong đợi gì**.
 
-Hiện tại đang ở bước **TDD Red**:
-- code đang stub
-- `npm test` hiện tại = **42 fail / 0 pass**
+Hiện tại đang ở bước **TDD Green**:
+- code đã implement theo test
+- `npm test` hiện tại = **44 pass / 0 fail**
 
 ## Tổng số test
 
 | Nhóm | File | Số test |
 |---|---|---:|
-| Unit — validation | `tests/unit/ticket-model.test.js` | 14 |
+| Unit — validation | `tests/unit/ticket-model.test.js` | 15 |
 | Unit — service | `tests/unit/ticket-service.test.js` | 11 |
 | Integration — JSON storage | `tests/integration/json-ticket-storage.test.js` | 4 |
-| Integration — CLI wiring | `tests/integration/cli.test.js` | 12 |
+| Integration — CLI wiring | `tests/integration/cli.test.js` | 13 |
 | E2E | `tests/e2e/cli.e2e.test.js` | 1 |
-| **Tổng** |  | **42** |
+| **Tổng** |  | **44** |
 
 ## Cách chạy
 
@@ -29,7 +29,7 @@ npm run test:e2e
 
 ---
 
-## 1. Unit — Validation (14 tests)
+## 1. Unit — Validation (15 tests)
 
 File: `tests/unit/ticket-model.test.js`
 
@@ -69,6 +69,18 @@ File: `tests/unit/ticket-model.test.js`
      }
      ```
    - Mong đợi: giữ nguyên `status`, `priority`, `tags`
+
+**Test bổ sung:** `create validation: normalizes status and priority casing`
+(Status/priority viết hoa vẫn được normalize)
+- Đầu vào:
+  ```js
+  {
+    title: 'API timeout',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH'
+  }
+  ```
+- Mong đợi: `status = 'in_progress'`, `priority = 'high'`
 
 3. `create validation: rejects missing title`
    (Thiếu title thì lỗi)
@@ -286,7 +298,7 @@ File: `tests/integration/json-ticket-storage.test.js`
 
 ---
 
-## 4. Integration — CLI wiring (12 tests)
+## 4. Integration — CLI wiring (13 tests)
 
 File: `tests/integration/cli.test.js`
 
@@ -324,6 +336,22 @@ Nhóm này test `runCli(argv, io)`.
       ['create', '--title', 'Bug login', '--priority', 'urgent', '--data-file', '<temp>/tickets.json']
       ```
     - Mong đợi: exit `1`; stderr có `priority must be one of`
+
+**Test bổ sung:** `CLI create: accepts case-insensitive command and option names`
+(Command và option name viết hoa vẫn được nhận)
+- Đầu vào argv:
+  ```js
+  [
+    'CREATE',
+    '--TITLE', 'Bug login',
+    '--DESCRIPTION', 'cannot sign in',
+    '--STATUS', 'OPEN',
+    '--PRIORITY', 'HIGH',
+    '--TAGS', 'bug,auth',
+    '--DATA-FILE', '<temp>/tickets.json'
+  ]
+  ```
+- Mong đợi: exit `0`; file có ticket với `status=open`, `priority=high`, `tags=['bug','auth']`
 
 ### Command `list`
 

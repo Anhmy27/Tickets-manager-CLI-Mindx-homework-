@@ -44,6 +44,45 @@ test('CLI create: writes ticket fields to JSON and prints success', async () => 
   }
 })
 
+test('CLI create: accepts case-insensitive command and option names', async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), 'ticket-cli-'))
+  const dataFile = join(tempDir, 'tickets.json')
+  const io = createIo()
+
+  try {
+    const exitCode = await runCli(
+      [
+        'CREATE',
+        '--TITLE',
+        'Bug login',
+        '--DESCRIPTION',
+        'cannot sign in',
+        '--STATUS',
+        'OPEN',
+        '--PRIORITY',
+        'HIGH',
+        '--TAGS',
+        'bug,auth',
+        '--DATA-FILE',
+        dataFile,
+      ],
+      io
+    )
+
+    const savedTickets = JSON.parse(await readFile(dataFile, 'utf8'))
+
+    assert.equal(exitCode, 0)
+    assert.match(io.stdout.output, /Created ticket/)
+    assert.equal(savedTickets[0].title, 'Bug login')
+    assert.equal(savedTickets[0].description, 'cannot sign in')
+    assert.equal(savedTickets[0].status, 'open')
+    assert.equal(savedTickets[0].priority, 'high')
+    assert.deepEqual(savedTickets[0].tags, ['bug', 'auth'])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
 test('CLI create: prints clear error for invalid input and does not create ticket', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'ticket-cli-'))
   const dataFile = join(tempDir, 'tickets.json')

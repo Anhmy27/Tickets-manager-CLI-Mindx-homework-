@@ -39,6 +39,17 @@ test('create validation: accepts explicit status, priority, and tags array', () 
   assert.deepEqual(input.tags, ['api', 'backend'])
 })
 
+test('create validation: normalizes status and priority casing', () => {
+  const input = validateCreateTicketInput({
+    title: 'API timeout',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+  })
+
+  assert.equal(input.status, 'in_progress')
+  assert.equal(input.priority, 'high')
+})
+
 test('create validation: rejects missing title', () => {
   assert.throws(
     () => validateCreateTicketInput({}),

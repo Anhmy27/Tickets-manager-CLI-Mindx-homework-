@@ -59,7 +59,9 @@ function createDefaultTicketUseCases(dataFile) {
 }
 
 export function parseCliArguments(argv = []) {
-  const [command, ...rest] = argv
+  const [rawCommand, ...rest] = argv
+  const command =
+    typeof rawCommand === 'string' ? rawCommand.toLowerCase() : rawCommand
   const flags = {}
   const positionals = []
 
@@ -70,7 +72,7 @@ export function parseCliArguments(argv = []) {
       continue
     }
 
-    const key = token.slice(2)
+    const key = token.slice(2).toLowerCase()
     const nextToken = rest[index + 1]
 
     if (nextToken === undefined || nextToken.startsWith('--')) {
