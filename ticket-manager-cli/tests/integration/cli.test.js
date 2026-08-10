@@ -4,7 +4,20 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { runCli } from '../../src/cli.js'
+import { parseCliArguments, runCli } from '../../src/cli.js'
+import { dirname, join as pathJoin } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const packageRoot = pathJoin(
+  dirname(fileURLToPath(import.meta.url)),
+  '../..'
+)
+
+test('CLI parse: default data file points to package data/tickets.json', () => {
+  const parsed = parseCliArguments(['list'])
+
+  assert.equal(parsed.dataFile, pathJoin(packageRoot, 'data', 'tickets.json'))
+})
 
 test('CLI create: writes ticket fields to JSON and prints success', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'ticket-cli-'))

@@ -112,8 +112,10 @@ node src/cli.js <command>
 Mặc định dữ liệu runtime được lưu tại:
 
 ```text
-data/tickets.json
+<data package>/data/tickets.json
 ```
+
+Đường dẫn mặc định được neo theo thư mục package của CLI, không theo thư mục bạn đang đứng. Vì vậy sau `npm link`, dù chạy `tickets list` từ bất kỳ đâu cũng vẫn đọc cùng một file data của project.
 
 File `data/tickets.json` được gitignore vì đây là dữ liệu local khi chạy app. Folder `data/` vẫn được giữ trong repo bằng file `data/.gitkeep`.
 

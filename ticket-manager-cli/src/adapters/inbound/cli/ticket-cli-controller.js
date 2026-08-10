@@ -2,7 +2,8 @@
  * Inbound adapter / controller for the CLI.
  */
 
-import { resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import {
   NotFoundError,
@@ -12,6 +13,12 @@ import {
 import { assertTicketUseCases } from '../../../application/ports/ticket-use-cases-inbound-port.js'
 import { TicketService } from '../../../application/use-cases/ticket-service.js'
 import { JsonTicketRepository } from '../../outbound/json/json-ticket-repository.js'
+
+const packageRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../..'
+)
+const DEFAULT_DATA_FILE = join(packageRoot, 'data', 'tickets.json')
 
 export async function runCli(argv, io = {}, dependencies = {}) {
   const stdout = io.stdout ?? process.stdout
@@ -91,7 +98,7 @@ export function parseCliArguments(argv = []) {
     dataFile:
       typeof flags['data-file'] === 'string' && flags['data-file'].trim() !== ''
         ? flags['data-file']
-        : 'data/tickets.json',
+        : DEFAULT_DATA_FILE,
   }
 }
 
