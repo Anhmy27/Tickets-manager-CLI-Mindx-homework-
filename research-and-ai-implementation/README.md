@@ -1,24 +1,25 @@
 # Research And AI Implementation
 
-Folder này dùng để lưu tài liệu research và quá trình dùng AI khi thiết kế, implement bài Week 2: Ticket Manager CLI.
+Folder này ghi **tóm tắt quá trình dùng AI** khi làm Week 2: Ticket Manager CLI — không phải export chat nguyên xi.
 
-Mục tiêu của folder:
+Mục tiêu:
 
-- Ghi lại cách dùng AI trong quá trình làm bài.
-- Chứng minh quá trình đi từ yêu cầu -> test -> implement -> refactor.
-- Lưu lại các quyết định kỹ thuật quan trọng khi áp dụng Hexagonal Architecture.
-- Có tài liệu để giải thích với mentor khi review bài.
+- Chỉ ra **đã làm gì với AI**, workflow nào, quyết định gì.
+- Giải thích **chỗ nào tôi verify / sửa / không tin AI mù quáng**.
+- Có tài liệu ngắn gọn để mentor review nhanh.
 
 ## Nội dung
 
-Bạn có thể tự export chat với AI từ Cursor và đặt vào folder này.
+| File | Phiên AI làm gì |
+|---|---|
+| [`cursor_research_tdd_test_and_implement.md`](./cursor_research_tdd_test_and_implement.md) | Research TDD, scaffold project, thiết kế test suite, refactor hexagonal, tạo TEST-CATALOG |
+| [`cursor_gitignore_for_ticket_manager_cli.md`](./cursor_gitignore_for_ticket_manager_cli.md) | Setup git, implement Green phase, học hexagonal, entity class, README, case-insensitive CLI |
 
-Gợi ý tên file:
+## Liên quan
 
-- `chat-export.md`
-- `ai-implementation-notes.md`
-- `research-notes.md`
+- Research Week 1 (TDD + Hexagonal): [`research-week-1/`](../research-week-1/)
+- Source code CLI: [`ticket-manager-cli/`](../ticket-manager-cli/)
 
 ## Ghi chú
 
-Folder này được đặt ở root repository và đã được mở trong `.gitignore`, nên có thể add/commit/push lên GitHub cùng với `ticket-manager-cli`.
+Folder này nằm ở root repository và đã được mở trong `.gitignore`, nên có thể add/commit/push lên GitHub.
