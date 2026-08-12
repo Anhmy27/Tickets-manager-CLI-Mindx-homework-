@@ -29,8 +29,6 @@ Một nhược điểm khác là người mới cần thời gian để hiểu c
 
 Ngoài ra, Hexagonal Architecture có thể bị over-engineering nếu áp dụng cho prototype ngắn hạn hoặc app CRUD quá đơn giản. Trong trường hợp đó, một cấu trúc đơn giản hơn có thể phù hợp hơn.
 
-**Workflow AI đã áp dụng:** Solution Exploration. Yêu cầu AI liệt kê ưu/nhược điểm, sau đó so sánh trong context bài Ticket Manager CLI. Kết luận là Hexagonal Architecture có thêm overhead, nhưng phù hợp với mục tiêu học Week 2 vì cần luyện testability và ports/adapters.
-
 ## 3. Khi nào nên áp dụng Hexagonal Architecture?
 
 Nên áp dụng Hexagonal Architecture khi ứng dụng có business logic quan trọng và cần được bảo vệ khỏi sự thay đổi của công nghệ bên ngoài. Nếu logic chính bị trộn với framework, database hoặc API, việc sửa đổi và test sau này sẽ khó hơn.
@@ -48,8 +46,6 @@ Một số ví dụ phù hợp:
 
 Không nên áp dụng quá nặng khi app chỉ là prototype nhỏ, CRUD đơn giản, ít logic nghiệp vụ, không cần test sâu và không có nhu cầu thay đổi integration. Khi đó, kiến trúc đơn giản sẽ nhanh và dễ hiểu hơn.
 
-**Workflow AI đã áp dụng:** Layered Questioning kết hợp Validation. Sau khi hỏi "khi nào nên dùng?", hỏi tiếp "khi nào không nên dùng?" và "edge cases/risk khi áp dụng là gì?" để tránh kết luận một chiều.
-
 ## 4. Hexagonal Architecture khác gì so với các architecture pattern khác?
 
 So với Layered Architecture, Hexagonal Architecture nhấn mạnh mạnh hơn vào việc domain phụ thuộc vào interface thay vì implementation. Layered Architecture thường chia thành controller, service, repository, nhưng nếu không cẩn thận, service vẫn có thể phụ thuộc trực tiếp vào repository/database cụ thể. Hexagonal Architecture yêu cầu rõ hơn việc adapter ở ngoài và domain ở trong.
@@ -61,8 +57,6 @@ So với MVC, MVC phù hợp cho ứng dụng có UI hoặc web app rõ ràng, c
 So với Simple CRUD Architecture, Hexagonal Architecture phức tạp hơn nhưng dễ mở rộng và dễ test hơn. Simple CRUD phù hợp khi app nhỏ, ít logic và cần làm nhanh. Hexagonal Architecture phù hợp hơn khi muốn code có ranh giới rõ, có thể đổi adapter, test domain độc lập và phát triển lâu dài.
 
 Với bài Week 2, Hexagonal Architecture là lựa chọn hợp lý hơn Simple CRUD vì mục tiêu không chỉ là build CLI chạy được, mà còn là luyện cách tách domain, ports và adapters. Ticket Manager CLI sẽ bắt đầu với JSON file adapter, nhưng về sau có thể thêm HTTP/API adapter mà không phải viết lại toàn bộ business logic.
-
-**Workflow AI đã áp dụng:** Iterative Refinement. Ban đầu AI gợi ý cấu trúc kiểu `controllers/services/repositories/models`, nhưng tôi nhận thấy cấu trúc đó là Layered Architecture đã thường xuyên code rồi. Tôi refine lại thành `domain/ports/adapters` vì tôi muốn hiểu thêm về hexagonal.
 
 ## 5. Quá trình research với AI
 
