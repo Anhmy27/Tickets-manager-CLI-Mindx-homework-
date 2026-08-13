@@ -1,10 +1,10 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import * as assert from 'node:assert/strict'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const execFileAsync = promisify(execFile)
@@ -39,12 +39,7 @@ test('E2E happy path: create → list → show → update against temp JSON', as
 
     assert.match(listResult.stdout, /Bug login/)
 
-    const showResult = await execCli([
-      'show',
-      createdTicket.id,
-      '--data-file',
-      dataFile,
-    ])
+    const showResult = await execCli(['show', createdTicket.id, '--data-file', dataFile])
 
     assert.match(showResult.stdout, new RegExp(createdTicket.id))
 
@@ -68,15 +63,27 @@ test('E2E happy path: create → list → show → update against temp JSON', as
   }
 })
 
-async function execCli(args) {
-  return execFileAsync(process.execPath, ['src/cli.js', ...args], {
-    cwd: cliRoot,
-  })
+async function execCli(args: string[]): Promise<{ stdout: string; stderr: string }> {
+  return execFileAsync(
+    process.execPath,
+    ['--import', 'tsx', 'src/cli.ts', ...args],
+    {
+      cwd: cliRoot,
+    }
+  )
 }
 
-function extractFirstJsonObject(output) {
+interface TicketJson {
+  id: string
+  title: string
+  description: string
+  status: string
+  tags: string[]
+}
+
+function extractFirstJsonObject(output: string): TicketJson {
   const start = output.indexOf('{')
   const end = output.lastIndexOf('}')
 
-  return JSON.parse(output.slice(start, end + 1))
+  return JSON.parse(output.slice(start, end + 1)) as TicketJson
 }

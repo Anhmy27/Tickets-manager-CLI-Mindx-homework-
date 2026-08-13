@@ -1,16 +1,16 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import * as assert from 'node:assert/strict'
+import { test } from 'node:test'
 
 import { NotFoundError, ValidationError } from '../../src/domain/shared/errors.js'
 import { TicketService } from '../../src/application/use-cases/ticket-service.js'
 
 test('createTicket: creates ticket with id, defaults, and saves once', async () => {
-  const savedPayloads = []
+  const savedPayloads: unknown[] = []
   const repository = {
     async loadTickets() {
       return []
     },
-    async saveTickets(tickets) {
+    async saveTickets(tickets: unknown) {
       savedPayloads.push(tickets)
     },
   }
@@ -35,7 +35,7 @@ test('createTicket: creates ticket with id, defaults, and saves once', async () 
   assert.equal(ticket.createdAt, '2026-08-06T11:00:00.000Z')
   assert.equal(ticket.updatedAt, '2026-08-06T11:00:00.000Z')
   assert.equal(savedPayloads.length, 1)
-  assert.equal(savedPayloads[0][0].id, 'ticket-1')
+  assert.equal((savedPayloads[0] as Array<{ id: string }>)[0]?.id, 'ticket-1')
 })
 
 test('createTicket: rejects invalid input before saving', async () => {
@@ -50,10 +50,7 @@ test('createTicket: rejects invalid input before saving', async () => {
 
   const service = new TicketService(repository)
 
-  await assert.rejects(
-    () => service.createTicket({ title: '' }),
-    ValidationError
-  )
+  await assert.rejects(() => service.createTicket({ title: '' }), ValidationError)
 })
 
 test('listTickets: returns only tickets matching status, priority, and tags', async () => {
@@ -63,23 +60,32 @@ test('listTickets: returns only tickets matching status, priority, and tags', as
         {
           id: '1',
           title: 'Bug login',
+          description: '',
           status: 'open',
           priority: 'high',
           tags: ['bug', 'auth'],
+          createdAt: '2026-08-06T10:00:00.000Z',
+          updatedAt: '2026-08-06T10:00:00.000Z',
         },
         {
           id: '2',
           title: 'Docs update',
+          description: '',
           status: 'closed',
           priority: 'low',
           tags: ['docs'],
+          createdAt: '2026-08-06T10:00:00.000Z',
+          updatedAt: '2026-08-06T10:00:00.000Z',
         },
         {
           id: '3',
           title: 'API timeout',
+          description: '',
           status: 'open',
           priority: 'high',
           tags: ['api'],
+          createdAt: '2026-08-06T10:00:00.000Z',
+          updatedAt: '2026-08-06T10:00:00.000Z',
         },
       ]
     },
@@ -96,7 +102,7 @@ test('listTickets: returns only tickets matching status, priority, and tags', as
   })
 
   assert.equal(tickets.length, 1)
-  assert.equal(tickets[0].id, '1')
+  assert.equal(tickets[0]?.id, '1')
 })
 
 test('listTickets: rejects invalid filters before reading repository data', async () => {
@@ -111,16 +117,24 @@ test('listTickets: rejects invalid filters before reading repository data', asyn
 
   const service = new TicketService(repository)
 
-  await assert.rejects(
-    () => service.listTickets({ status: 'done' }),
-    ValidationError
-  )
+  await assert.rejects(() => service.listTickets({ status: 'done' }), ValidationError)
 })
 
 test('showTicket: returns the matching ticket', async () => {
   const repository = {
     async loadTickets() {
-      return [{ id: '1', title: 'Bug login', status: 'open' }]
+      return [
+        {
+          id: '1',
+          title: 'Bug login',
+          description: '',
+          status: 'open',
+          priority: 'medium',
+          tags: [],
+          createdAt: '2026-08-06T10:00:00.000Z',
+          updatedAt: '2026-08-06T10:00:00.000Z',
+        },
+      ]
     },
     async saveTickets() {
       throw new Error('saveTickets should not be called')
@@ -165,7 +179,7 @@ test('showTicket: rejects empty id before reading repository data', async () => 
 })
 
 test('updateTicket: updates only the target ticket status and preserves other fields', async () => {
-  let savedTickets = []
+  let savedTickets: Array<{ status: string }> = []
   const repository = {
     async loadTickets() {
       return [
@@ -191,7 +205,7 @@ test('updateTicket: updates only the target ticket status and preserves other fi
         },
       ]
     },
-    async saveTickets(tickets) {
+    async saveTickets(tickets: Array<{ status: string }>) {
       savedTickets = tickets
     },
   }
@@ -207,8 +221,8 @@ test('updateTicket: updates only the target ticket status and preserves other fi
   assert.equal(ticket.description, 'cannot sign in')
   assert.deepEqual(ticket.tags, ['bug'])
   assert.equal(ticket.updatedAt, '2026-08-06T11:00:00.000Z')
-  assert.equal(savedTickets[0].status, 'closed')
-  assert.equal(savedTickets[1].status, 'open')
+  assert.equal(savedTickets[0]?.status, 'closed')
+  assert.equal(savedTickets[1]?.status, 'open')
 })
 
 test('updateTicket: throws not found when ticket does not exist', async () => {
@@ -232,7 +246,18 @@ test('updateTicket: throws not found when ticket does not exist', async () => {
 test('updateTicket: rejects invalid status before saving', async () => {
   const repository = {
     async loadTickets() {
-      return [{ id: '1', title: 'Bug login', status: 'open' }]
+      return [
+        {
+          id: '1',
+          title: 'Bug login',
+          description: '',
+          status: 'open',
+          priority: 'medium',
+          tags: [],
+          createdAt: '2026-08-06T10:00:00.000Z',
+          updatedAt: '2026-08-06T10:00:00.000Z',
+        },
+      ]
     },
     async saveTickets() {
       throw new Error('saveTickets should not be called')

@@ -1,5 +1,5 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import * as assert from 'node:assert/strict'
+import { test } from 'node:test'
 
 import { ValidationError } from '../../src/domain/shared/errors.js'
 import {
@@ -53,7 +53,7 @@ test('create validation: normalizes status and priority casing', () => {
 test('create validation: rejects missing title', () => {
   assert.throws(
     () => validateCreateTicketInput({}),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /title is required/i.test(error.message)
   )
 })
@@ -61,7 +61,7 @@ test('create validation: rejects missing title', () => {
 test('create validation: rejects empty title', () => {
   assert.throws(
     () => validateCreateTicketInput({ title: '   ' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /title is required/i.test(error.message)
   )
 })
@@ -69,7 +69,7 @@ test('create validation: rejects empty title', () => {
 test('create validation: rejects invalid status', () => {
   assert.throws(
     () => validateCreateTicketInput({ title: 'Bug login', status: 'done' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /status must be one of/i.test(error.message)
   )
 })
@@ -77,7 +77,7 @@ test('create validation: rejects invalid status', () => {
 test('create validation: rejects invalid priority', () => {
   assert.throws(
     () => validateCreateTicketInput({ title: 'Bug login', priority: 'urgent' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /priority must be one of/i.test(error.message)
   )
 })
@@ -85,7 +85,7 @@ test('create validation: rejects invalid priority', () => {
 test('create validation: rejects tags with unsupported type', () => {
   assert.throws(
     () => validateCreateTicketInput({ title: 'Bug login', tags: 123 }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError &&
       /tags must be a string or an array of strings/i.test(error.message)
   )
@@ -108,7 +108,7 @@ test('list validation: accepts valid status, priority, and tags filters', () => 
 test('list validation: rejects unsupported status filter', () => {
   assert.throws(
     () => validateListFilters({ status: 'done' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /status must be one of/i.test(error.message)
   )
 })
@@ -116,7 +116,7 @@ test('list validation: rejects unsupported status filter', () => {
 test('list validation: rejects unsupported priority filter', () => {
   assert.throws(
     () => validateListFilters({ priority: 'urgent' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /priority must be one of/i.test(error.message)
   )
 })
@@ -124,7 +124,7 @@ test('list validation: rejects unsupported priority filter', () => {
 test('list validation: rejects tags filter with unsupported type', () => {
   assert.throws(
     () => validateListFilters({ tags: { name: 'bug' } }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError &&
       /tags must be a string or an array of strings/i.test(error.message)
   )
@@ -133,7 +133,7 @@ test('list validation: rejects tags filter with unsupported type', () => {
 test('show validation: rejects missing ticket id', () => {
   assert.throws(
     () => validateTicketId(' '),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /ticket id is required/i.test(error.message)
   )
 })
@@ -141,13 +141,13 @@ test('show validation: rejects missing ticket id', () => {
 test('update validation: requires a valid status', () => {
   assert.throws(
     () => validateUpdateTicketInput({}),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /status is required/i.test(error.message)
   )
 
   assert.throws(
     () => validateUpdateTicketInput({ status: 'done' }),
-    (error) =>
+    (error: unknown) =>
       error instanceof ValidationError && /status must be one of/i.test(error.message)
   )
 })

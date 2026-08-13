@@ -1,17 +1,13 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
+import * as assert from 'node:assert/strict'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-
-import { parseCliArguments, runCli } from '../../src/cli.js'
-import { dirname, join as pathJoin } from 'node:path'
+import { dirname, join, join as pathJoin } from 'node:path'
+import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-const packageRoot = pathJoin(
-  dirname(fileURLToPath(import.meta.url)),
-  '../..'
-)
+import { parseCliArguments, runCli } from '../../src/cli.js'
+
+const packageRoot = pathJoin(dirname(fileURLToPath(import.meta.url)), '../..')
 
 test('CLI parse: default data file points to package data/tickets.json', () => {
   const parsed = parseCliArguments(['list'])
@@ -119,15 +115,7 @@ test('CLI create: prints clear error for invalid priority', async () => {
 
   try {
     const exitCode = await runCli(
-      [
-        'create',
-        '--title',
-        'Bug login',
-        '--priority',
-        'urgent',
-        '--data-file',
-        dataFile,
-      ],
+      ['create', '--title', 'Bug login', '--priority', 'urgent', '--data-file', dataFile],
       io
     )
 
@@ -151,16 +139,22 @@ test('CLI list: filters tickets by status and prints matches', async () => {
           {
             id: '1',
             title: 'Bug login',
+            description: '',
             status: 'open',
             priority: 'high',
             tags: ['bug'],
+            createdAt: '2026-08-06T10:00:00.000Z',
+            updatedAt: '2026-08-06T10:00:00.000Z',
           },
           {
             id: '2',
             title: 'Docs update',
+            description: '',
             status: 'closed',
             priority: 'low',
             tags: ['docs'],
+            createdAt: '2026-08-06T10:00:00.000Z',
+            updatedAt: '2026-08-06T10:00:00.000Z',
           },
         ],
         null,
@@ -169,10 +163,7 @@ test('CLI list: filters tickets by status and prints matches', async () => {
       'utf8'
     )
 
-    const exitCode = await runCli(
-      ['list', '--status', 'open', '--data-file', dataFile],
-      io
-    )
+    const exitCode = await runCli(['list', '--status', 'open', '--data-file', dataFile], io)
 
     assert.equal(exitCode, 0)
     assert.match(io.stdout.output, /Bug login/)
@@ -188,10 +179,7 @@ test('CLI list: prints clear error for invalid status filter', async () => {
   const io = createIo()
 
   try {
-    const exitCode = await runCli(
-      ['list', '--status', 'done', '--data-file', dataFile],
-      io
-    )
+    const exitCode = await runCli(['list', '--status', 'done', '--data-file', dataFile], io)
 
     assert.equal(exitCode, 1)
     assert.match(io.stderr.output, /status must be one of/i)
@@ -223,10 +211,7 @@ test('CLI show: prints clear not found error', async () => {
   const io = createIo()
 
   try {
-    const exitCode = await runCli(
-      ['show', 'missing-id', '--data-file', dataFile],
-      io
-    )
+    const exitCode = await runCli(['show', 'missing-id', '--data-file', dataFile], io)
 
     assert.equal(exitCode, 1)
     assert.match(io.stderr.output, /not found/i)
@@ -301,14 +286,26 @@ test('CLI update: prints clear error for invalid status', async () => {
   try {
     await writeFile(
       dataFile,
-      JSON.stringify([{ id: '1', title: 'Bug login', status: 'open' }], null, 2),
+      JSON.stringify(
+        [
+          {
+            id: '1',
+            title: 'Bug login',
+            description: '',
+            status: 'open',
+            priority: 'medium',
+            tags: [],
+            createdAt: '2026-08-06T10:00:00.000Z',
+            updatedAt: '2026-08-06T10:00:00.000Z',
+          },
+        ],
+        null,
+        2
+      ),
       'utf8'
     )
 
-    const exitCode = await runCli(
-      ['update', '1', '--status', 'done', '--data-file', dataFile],
-      io
-    )
+    const exitCode = await runCli(['update', '1', '--status', 'done', '--data-file', dataFile], io)
 
     assert.equal(exitCode, 1)
     assert.match(io.stderr.output, /status must be one of/i)
@@ -323,10 +320,7 @@ test('CLI update: prints clear error when id is missing', async () => {
   const io = createIo()
 
   try {
-    const exitCode = await runCli(
-      ['update', '--status', 'closed', '--data-file', dataFile],
-      io
-    )
+    const exitCode = await runCli(['update', '--status', 'closed', '--data-file', dataFile], io)
 
     assert.equal(exitCode, 1)
     assert.match(io.stderr.output, /ticket id is required/i)
@@ -350,18 +344,25 @@ test('CLI update: prints clear error when status is missing', async () => {
   }
 })
 
-function createIo() {
+interface WritableBuffer {
+  output: string
+  write(chunk: string): void
+}
+
+function createIo(): { stdout: WritableBuffer; stderr: WritableBuffer } {
   return {
     stdout: createWritableBuffer(),
     stderr: createWritableBuffer(),
   }
 }
 
-function createWritableBuffer() {
-  return {
+function createWritableBuffer(): WritableBuffer {
+  const buffer: WritableBuffer = {
     output: '',
-    write(chunk) {
-      this.output += chunk
+    write(chunk: string) {
+      buffer.output += chunk
     },
   }
+
+  return buffer
 }

@@ -5,10 +5,14 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
+import type { TicketRepositoryOutboundPort } from '../../../application/ports/ticket-repository-outbound-port.js'
 import { StorageError } from '../../../domain/shared/errors.js'
+import type { TicketSnapshot } from '../../../domain/tickets/ticket.js'
 
-export class JsonTicketRepository {
-  constructor(filePath) {
+export class JsonTicketRepository implements TicketRepositoryOutboundPort {
+  private readonly filePath: string
+
+  constructor(filePath: string) {
     if (typeof filePath !== 'string' || filePath.trim() === '') {
       throw new TypeError('A valid JSON ticket file path is required.')
     }
@@ -16,18 +20,18 @@ export class JsonTicketRepository {
     this.filePath = filePath
   }
 
-  async loadTickets() {
+  async loadTickets(): Promise<TicketSnapshot[]> {
     try {
       const raw = await readFile(this.filePath, 'utf8')
-      const data = JSON.parse(raw)
+      const data: unknown = JSON.parse(raw)
 
       if (!Array.isArray(data)) {
         throw new StorageError('Ticket storage must be a JSON array.')
       }
 
-      return data
-    } catch (error) {
-      if (error && error.code === 'ENOENT') {
+      return data as TicketSnapshot[]
+    } catch (error: unknown) {
+      if (isNodeError(error) && error.code === 'ENOENT') {
         return []
       }
 
@@ -39,11 +43,11 @@ export class JsonTicketRepository {
         throw new StorageError('Ticket storage is corrupted JSON.')
       }
 
-      throw new StorageError(`Unable to load tickets: ${error.message}`)
+      throw new StorageError(`Unable to load tickets: ${toErrorMessage(error)}`)
     }
   }
 
-  async saveTickets(tickets) {
+  async saveTickets(tickets: TicketSnapshot[]): Promise<void> {
     if (!Array.isArray(tickets)) {
       throw new StorageError('Tickets payload must be an array.')
     }
@@ -51,8 +55,16 @@ export class JsonTicketRepository {
     try {
       await mkdir(dirname(this.filePath), { recursive: true })
       await writeFile(this.filePath, JSON.stringify(tickets, null, 2), 'utf8')
-    } catch (error) {
-      throw new StorageError(`Unable to save tickets: ${error.message}`)
+    } catch (error: unknown) {
+      throw new StorageError(`Unable to save tickets: ${toErrorMessage(error)}`)
     }
   }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }

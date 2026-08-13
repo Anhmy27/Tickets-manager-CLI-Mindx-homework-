@@ -5,14 +5,32 @@
 import { NotFoundError } from '../../domain/shared/errors.js'
 import {
   Ticket,
+  type CreateTicketInput,
+  type ListTicketFiltersInput,
+  type NormalizedTicketFilters,
+  type TicketSnapshot,
+  type UpdateTicketInput,
   validateListFilters,
   validateTicketId,
   validateUpdateTicketInput,
 } from '../../domain/tickets/ticket.js'
-import { assertTicketRepository } from '../ports/ticket-repository-outbound-port.js'
+import {
+  assertTicketRepository,
+  type TicketRepositoryOutboundPort,
+} from '../ports/ticket-repository-outbound-port.js'
+import type { TicketUseCasesInboundPort } from '../ports/ticket-use-cases-inbound-port.js'
 
-export class TicketService {
-  constructor(ticketRepository, options = {}) {
+interface TicketServiceOptions {
+  idGenerator?: () => string
+  now?: () => string
+}
+
+export class TicketService implements TicketUseCasesInboundPort {
+  private readonly ticketRepository: TicketRepositoryOutboundPort
+  private readonly idGenerator: () => string
+  private readonly now: () => string
+
+  constructor(ticketRepository: unknown, options: TicketServiceOptions = {}) {
     assertTicketRepository(ticketRepository)
 
     this.ticketRepository = ticketRepository
@@ -20,7 +38,7 @@ export class TicketService {
     this.now = options.now ?? (() => new Date().toISOString())
   }
 
-  async createTicket(input) {
+  async createTicket(input: CreateTicketInput): Promise<TicketSnapshot> {
     const createdTicket = Ticket.create({
       id: this.idGenerator(),
       input,
@@ -33,14 +51,16 @@ export class TicketService {
     return createdTicket
   }
 
-  async listTickets(filters = {}) {
+  async listTickets(
+    filters: ListTicketFiltersInput = {}
+  ): Promise<TicketSnapshot[]> {
     const validatedFilters = validateListFilters(filters)
     const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
 
     return tickets.filter((ticket) => matchesFilters(ticket, validatedFilters))
   }
 
-  async showTicket(id) {
+  async showTicket(id: unknown): Promise<TicketSnapshot> {
     const validatedId = validateTicketId(id)
     const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
     const ticket = tickets.find((item) => item.id === validatedId)
@@ -52,7 +72,10 @@ export class TicketService {
     return ticket
   }
 
-  async updateTicket(id, input) {
+  async updateTicket(
+    id: unknown,
+    input: UpdateTicketInput
+  ): Promise<TicketSnapshot> {
     const validatedId = validateTicketId(id)
     validateUpdateTicketInput(input)
     const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
@@ -62,7 +85,7 @@ export class TicketService {
       throw new NotFoundError(`Ticket ${validatedId} not found`)
     }
 
-    const updatedTicket = Ticket.fromPersistence(tickets[index])
+    const updatedTicket = Ticket.fromPersistence(tickets[index]!)
       .updateStatus(input, this.now())
       .toJSON()
 
@@ -75,15 +98,18 @@ export class TicketService {
   }
 }
 
-function createDefaultId() {
+function createDefaultId(): string {
   return `ticket-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-function hydrateTickets(tickets) {
+function hydrateTickets(tickets: TicketSnapshot[]): TicketSnapshot[] {
   return tickets.map((ticket) => Ticket.fromPersistence(ticket).toJSON())
 }
 
-function matchesFilters(ticket, filters) {
+function matchesFilters(
+  ticket: TicketSnapshot,
+  filters: NormalizedTicketFilters
+): boolean {
   if (filters.status !== undefined && ticket.status !== filters.status) {
     return false
   }

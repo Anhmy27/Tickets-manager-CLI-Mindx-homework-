@@ -66,17 +66,17 @@ Outbound Adapter: JSON file storage
 ```text
 ticket-manager-cli/
 ├── src/
-│   ├── cli.js
+│   ├── cli.ts
 │   ├── domain/
-│   │   ├── shared/errors.js
-│   │   └── tickets/ticket.js
+│   │   ├── shared/errors.ts
+│   │   └── tickets/ticket.ts
 │   ├── application/
-│   │   ├── ports/ticket-repository-outbound-port.js
-│   │   ├── ports/ticket-use-cases-inbound-port.js
-│   │   └── use-cases/ticket-service.js
+│   │   ├── ports/ticket-repository-outbound-port.ts
+│   │   ├── ports/ticket-use-cases-inbound-port.ts
+│   │   └── use-cases/ticket-service.ts
 │   └── adapters/
-│       ├── inbound/cli/ticket-cli-controller.js
-│       └── outbound/json/json-ticket-repository.js
+│       ├── inbound/cli/ticket-cli-controller.ts
+│       └── outbound/json/json-ticket-repository.ts
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -103,10 +103,10 @@ npm install
 
 ## Hướng Dẫn Sử Dụng
 
-CLI có thể chạy trực tiếp bằng Node:
+CLI có thể chạy trực tiếp bằng tsx:
 
 ```bash
-node src/cli.js <command>
+npx tsx src/cli.ts <command>
 ```
 
 Mặc định dữ liệu runtime được lưu tại:
@@ -122,13 +122,13 @@ File `data/tickets.json` được gitignore vì đây là dữ liệu local khi 
 ### Tạo ticket
 
 ```bash
-node src/cli.js create --title "Bug login"
+npx tsx src/cli.ts create --title "Bug login"
 ```
 
 Tạo ticket với nhiều thông tin hơn:
 
 ```bash
-node src/cli.js create --title "API timeout" --description "Endpoint phản hồi chậm" --priority high --tags api,backend
+npx tsx src/cli.ts create --title "API timeout" --description "Endpoint phản hồi chậm" --priority high --tags api,backend
 ```
 
 Các field hỗ trợ:
@@ -150,43 +150,43 @@ Giá trị mặc định:
 ### Liệt kê ticket
 
 ```bash
-node src/cli.js list
+npx tsx src/cli.ts list
 ```
 
 Filter theo status:
 
 ```bash
-node src/cli.js list --status open
+npx tsx src/cli.ts list --status open
 ```
 
 Filter theo priority và tags:
 
 ```bash
-node src/cli.js list --priority high --tags api
+npx tsx src/cli.ts list --priority high --tags api
 ```
 
 ### Xem chi tiết ticket
 
 ```bash
-node src/cli.js show <id>
+npx tsx src/cli.ts show <id>
 ```
 
 Ví dụ:
 
 ```bash
-node src/cli.js show ticket-1
+npx tsx src/cli.ts show ticket-1
 ```
 
 ### Cập nhật status ticket
 
 ```bash
-node src/cli.js update <id> --status closed
+npx tsx src/cli.ts update <id> --status closed
 ```
 
 Ví dụ:
 
 ```bash
-node src/cli.js update ticket-1 --status in_progress
+npx tsx src/cli.ts update ticket-1 --status in_progress
 ```
 
 ### Dùng file dữ liệu tùy chỉnh
@@ -194,7 +194,7 @@ node src/cli.js update ticket-1 --status in_progress
 Có thể dùng `--data-file` để chỉ định file JSON khác:
 
 ```bash
-node src/cli.js create --title "Bug login" --data-file ./tmp/tickets.json
+npx tsx src/cli.ts create --title "Bug login" --data-file ./tmp/tickets.json
 ```
 
 Tính năng này hữu ích khi test hoặc muốn chạy thử mà không ghi vào `data/tickets.json` mặc định.
@@ -236,7 +236,7 @@ CLI trả exit code `1` và in lỗi rõ ràng khi gặp các trường hợp:
 Ví dụ:
 
 ```bash
-node src/cli.js create
+npx tsx src/cli.ts create
 ```
 
 Kết quả:

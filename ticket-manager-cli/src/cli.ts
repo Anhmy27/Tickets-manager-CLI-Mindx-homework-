@@ -9,7 +9,7 @@ export {
   runCli,
 } from './adapters/inbound/cli/ticket-cli-controller.js'
 
-function resolveExistingPath(filePath) {
+function resolveExistingPath(filePath: string): string {
   try {
     return realpathSync(resolve(filePath))
   } catch {
@@ -20,7 +20,7 @@ function resolveExistingPath(filePath) {
 const currentFilePath = resolveExistingPath(fileURLToPath(import.meta.url))
 const isDirectRun =
   Boolean(process.argv[1]) &&
-  resolveExistingPath(process.argv[1]) === currentFilePath
+  resolveExistingPath(process.argv[1]!) === currentFilePath
 
 if (isDirectRun) {
   const { runCli } = await import('./adapters/inbound/cli/ticket-cli-controller.js')

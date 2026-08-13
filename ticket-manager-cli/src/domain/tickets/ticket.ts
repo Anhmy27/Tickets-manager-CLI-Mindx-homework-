@@ -4,10 +4,57 @@
 
 import { ValidationError } from '../shared/errors.js'
 
-export const TICKET_STATUSES = ['open', 'in_progress', 'closed']
-export const TICKET_PRIORITIES = ['low', 'medium', 'high']
+export const TICKET_STATUSES = ['open', 'in_progress', 'closed'] as const
+export const TICKET_PRIORITIES = ['low', 'medium', 'high'] as const
+
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
+
+export interface TicketSnapshot {
+  id: string
+  title: string
+  description: string
+  status: TicketStatus
+  priority: TicketPriority
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTicketInput {
+  title?: unknown
+  description?: unknown
+  status?: unknown
+  priority?: unknown
+  tags?: unknown
+}
+
+export interface ListTicketFiltersInput {
+  status?: unknown
+  priority?: unknown
+  tags?: unknown
+}
+
+export interface NormalizedTicketFilters {
+  status?: TicketStatus
+  priority?: TicketPriority
+  tags?: string[]
+}
+
+export interface UpdateTicketInput {
+  status?: unknown
+}
 
 export class Ticket {
+  readonly id: string
+  readonly title: string
+  readonly description: string
+  readonly status: TicketStatus
+  readonly priority: TicketPriority
+  readonly tags: string[]
+  readonly createdAt: string
+  readonly updatedAt: string
+
   constructor({
     id,
     title,
@@ -17,7 +64,7 @@ export class Ticket {
     tags,
     createdAt,
     updatedAt,
-  }) {
+  }: TicketSnapshot) {
     const validatedInput = validateCreateTicketInput({
       title,
       description,
@@ -36,7 +83,15 @@ export class Ticket {
     this.updatedAt = updatedAt
   }
 
-  static create({ id, input, timestamp }) {
+  static create({
+    id,
+    input,
+    timestamp,
+  }: {
+    id: string
+    input: CreateTicketInput
+    timestamp: string
+  }): Ticket {
     const validatedInput = validateCreateTicketInput(input)
 
     return new Ticket({
@@ -47,11 +102,11 @@ export class Ticket {
     })
   }
 
-  static fromPersistence(data) {
+  static fromPersistence(data: TicketSnapshot): Ticket {
     return new Ticket(data)
   }
 
-  updateStatus(input, timestamp) {
+  updateStatus(input: UpdateTicketInput, timestamp: string): Ticket {
     const validatedInput = validateUpdateTicketInput(input)
 
     return new Ticket({
@@ -61,7 +116,7 @@ export class Ticket {
     })
   }
 
-  toJSON() {
+  toJSON(): TicketSnapshot {
     return {
       id: this.id,
       title: this.title,
@@ -75,7 +130,9 @@ export class Ticket {
   }
 }
 
-export function validateCreateTicketInput(input = {}) {
+export function validateCreateTicketInput(
+  input: CreateTicketInput = {}
+): Omit<TicketSnapshot, 'id' | 'createdAt' | 'updatedAt'> {
   const title = normalizeRequiredText(input.title, 'title is required')
   const description = normalizeOptionalText(input.description)
   const status = normalizeEnumValue(
@@ -99,8 +156,10 @@ export function validateCreateTicketInput(input = {}) {
   }
 }
 
-export function validateListFilters(filters = {}) {
-  const normalized = {}
+export function validateListFilters(
+  filters: ListTicketFiltersInput = {}
+): NormalizedTicketFilters {
+  const normalized: NormalizedTicketFilters = {}
 
   if (filters.status !== undefined) {
     normalized.status = normalizeEnumValue(
@@ -125,11 +184,13 @@ export function validateListFilters(filters = {}) {
   return normalized
 }
 
-export function validateTicketId(id) {
+export function validateTicketId(id: unknown): string {
   return normalizeRequiredText(id, 'ticket id is required')
 }
 
-export function validateUpdateTicketInput(input = {}) {
+export function validateUpdateTicketInput(
+  input: UpdateTicketInput = {}
+): { status: TicketStatus } {
   if (input.status === undefined) {
     throw new ValidationError('status is required')
   }
@@ -143,7 +204,7 @@ export function validateUpdateTicketInput(input = {}) {
   }
 }
 
-function normalizeRequiredText(value, message) {
+function normalizeRequiredText(value: unknown, message: string): string {
   const normalized = typeof value === 'string' ? value.trim() : ''
   if (!normalized) {
     throw new ValidationError(message)
@@ -152,7 +213,7 @@ function normalizeRequiredText(value, message) {
   return normalized
 }
 
-function normalizeOptionalText(value) {
+function normalizeOptionalText(value: unknown): string {
   if (value === undefined || value === null) {
     return ''
   }
@@ -160,16 +221,20 @@ function normalizeOptionalText(value) {
   return String(value).trim()
 }
 
-function normalizeEnumValue(value, allowedValues, message) {
+function normalizeEnumValue<const T extends readonly string[]>(
+  value: unknown,
+  allowedValues: T,
+  message: string
+): T[number] {
   const normalized = normalizeRequiredText(value, message).toLowerCase()
-  if (!allowedValues.includes(normalized)) {
+  if (!allowedValues.includes(normalized as T[number])) {
     throw new ValidationError(message)
   }
 
-  return normalized
+  return normalized as T[number]
 }
 
-function normalizeTags(tags) {
+function normalizeTags(tags: unknown): string[] {
   if (tags === undefined || tags === null || tags === '') {
     return []
   }

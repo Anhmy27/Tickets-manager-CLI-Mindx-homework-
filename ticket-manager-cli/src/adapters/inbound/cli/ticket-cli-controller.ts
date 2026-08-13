@@ -11,8 +11,34 @@ import {
   ValidationError,
 } from '../../../domain/shared/errors.js'
 import { assertTicketUseCases } from '../../../application/ports/ticket-use-cases-inbound-port.js'
+import type { TicketUseCasesInboundPort } from '../../../application/ports/ticket-use-cases-inbound-port.js'
 import { TicketService } from '../../../application/use-cases/ticket-service.js'
 import { JsonTicketRepository } from '../../outbound/json/json-ticket-repository.js'
+
+type CliCommand = 'create' | 'list' | 'show' | 'update' | undefined | string
+
+type CliFlagValue = string | true
+type CliFlags = Record<string, CliFlagValue>
+
+interface ParsedCliArguments {
+  command: CliCommand
+  positionals: string[]
+  flags: CliFlags
+  dataFile: string
+}
+
+interface WritableLike {
+  write(chunk: string): void
+}
+
+interface CliIo {
+  stdout?: WritableLike
+  stderr?: WritableLike
+}
+
+interface CliDependencies {
+  ticketUseCases?: TicketUseCasesInboundPort
+}
 
 const packageRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -20,7 +46,11 @@ const packageRoot = resolve(
 )
 const DEFAULT_DATA_FILE = join(packageRoot, 'data', 'tickets.json')
 
-export async function runCli(argv, io = {}, dependencies = {}) {
+export async function runCli(
+  argv: string[],
+  io: CliIo = {},
+  dependencies: CliDependencies = {}
+): Promise<number> {
   const stdout = io.stdout ?? process.stdout
   const stderr = io.stderr ?? process.stderr
 
@@ -45,7 +75,7 @@ export async function runCli(argv, io = {}, dependencies = {}) {
           'Unknown command. Use one of: create, list, show, update'
         )
     }
-  } catch (error) {
+  } catch (error: unknown) {
     if (
       error instanceof ValidationError ||
       error instanceof NotFoundError ||
@@ -55,25 +85,29 @@ export async function runCli(argv, io = {}, dependencies = {}) {
       return 1
     }
 
-    stderr.write(`Unexpected error: ${error.message}\n`)
+    stderr.write(`Unexpected error: ${toErrorMessage(error)}\n`)
     return 1
   }
 }
 
-function createDefaultTicketUseCases(dataFile) {
+function createDefaultTicketUseCases(dataFile: string): TicketUseCasesInboundPort {
   const repository = new JsonTicketRepository(resolve(dataFile))
   return new TicketService(repository)
 }
 
-export function parseCliArguments(argv = []) {
+export function parseCliArguments(argv: string[] = []): ParsedCliArguments {
   const [rawCommand, ...rest] = argv
   const command =
     typeof rawCommand === 'string' ? rawCommand.toLowerCase() : rawCommand
-  const flags = {}
-  const positionals = []
+  const flags: CliFlags = {}
+  const positionals: string[] = []
 
   for (let index = 0; index < rest.length; index += 1) {
     const token = rest[index]
+    if (token === undefined) {
+      continue
+    }
+
     if (!token.startsWith('--')) {
       positionals.push(token)
       continue
@@ -102,7 +136,11 @@ export function parseCliArguments(argv = []) {
   }
 }
 
-async function handleCreate(parsed, ticketUseCases, stdout) {
+async function handleCreate(
+  parsed: ParsedCliArguments,
+  ticketUseCases: TicketUseCasesInboundPort,
+  stdout: WritableLike
+): Promise<number> {
   const createdTicket = await ticketUseCases.createTicket({
     title: parsed.flags.title,
     description: parsed.flags.description,
@@ -116,7 +154,11 @@ async function handleCreate(parsed, ticketUseCases, stdout) {
   return 0
 }
 
-async function handleList(parsed, ticketUseCases, stdout) {
+async function handleList(
+  parsed: ParsedCliArguments,
+  ticketUseCases: TicketUseCasesInboundPort,
+  stdout: WritableLike
+): Promise<number> {
   const tickets = await ticketUseCases.listTickets({
     status: parsed.flags.status,
     priority: parsed.flags.priority,
@@ -127,14 +169,22 @@ async function handleList(parsed, ticketUseCases, stdout) {
   return 0
 }
 
-async function handleShow(parsed, ticketUseCases, stdout) {
+async function handleShow(
+  parsed: ParsedCliArguments,
+  ticketUseCases: TicketUseCasesInboundPort,
+  stdout: WritableLike
+): Promise<number> {
   const ticket = await ticketUseCases.showTicket(parsed.positionals[0])
 
   stdout.write(`${JSON.stringify(ticket, null, 2)}\n`)
   return 0
 }
 
-async function handleUpdate(parsed, ticketUseCases, stdout) {
+async function handleUpdate(
+  parsed: ParsedCliArguments,
+  ticketUseCases: TicketUseCasesInboundPort,
+  stdout: WritableLike
+): Promise<number> {
   const updatedTicket = await ticketUseCases.updateTicket(parsed.positionals[0], {
     status: parsed.flags.status,
   })
@@ -142,4 +192,8 @@ async function handleUpdate(parsed, ticketUseCases, stdout) {
   stdout.write(`Updated ticket ${updatedTicket.id}\n`)
   stdout.write(`${JSON.stringify(updatedTicket, null, 2)}\n`)
   return 0
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
