@@ -2,23 +2,30 @@
 
 ## 1. TDD và Red-Green-Refactor
 
-TDD là gì?
-  TDD (Test-Driven Development) là cách phát triển trong đó viết test trước, rồi mới viết code. Test không chỉ để kiểm tra code mà còn giúp mình xác định rõ hành vi của hệ thống phải như thế nào.
-  
-Mục đích cốt lõi của việc viết test trước và code sau giúp cho dev có một quy trình làm việc chuyên nghiệp, làm đến đâu chắc đến đấy, code chuẩn, đủ và không bị thừa so với scope để tránh những trường hợp code rác, ko hợp lý. đặc biệt là viết unit test trước cũng giúp dev thiết kế hệ thống tốt hơn, tách module chuẩn chỉ, giảm tải việc một file làm rất nhiều việc( đặc điểm rất dễ gặp nếu code trước rồi mới test). 
-Red-Green-Refactor
-Red: Viết test trước rồi chạy test. Test phải fail vì chức năng chưa được implement hoặc chưa đúng.
-Green: Viết lượng code tối thiểu để test pass. Lúc này ưu tiên làm đúng behavior đã xác định, chưa cần tối ưu code.
-Refactor: Khi test đã pass, chỉnh sửa cấu trúc code để dễ đọc, dễ maintain hoặc giảm duplication, nhưng không thay đổi behavior. Sau mỗi thay đổi, chạy lại test để đảm bảo chức năng cũ vẫn đúng.
+**TDD là gì?**
+
+TDD (Test-Driven Development) là cách phát triển trong đó viết test trước, rồi mới viết code. Mục đích cốt lõi của việc viết test trước và code sau giúp cho dev nắm rõ behavior của hệ thống, có một quy trình làm việc chuyên nghiệp, làm đến đâu chắc đến đấy, code chuẩn, đủ và không bị thừa so với scope để tránh những trường hợp code rác, ko hợp lý. đặc biệt là viết unit test trước cũng giúp dev thiết kế hệ thống tốt hơn, tách module chuẩn chỉ, giảm tải việc một file làm rất nhiều việc( đặc điểm rất dễ gặp nếu code trước rồi mới test). Đặc biệt với việc AI gần như giúp việc viết code như hiện nay thì TDD lại càng trở lên quan trọng. dev sẽ là người cần test và kiểm tra lại xem AI code như thế nào.
+
+**Red-Green-Refactor**
+
+**Red:** Viết test trước rồi chạy test. Test phải fail vì chức năng chưa được implement hoặc chưa đúng.
+
+**Green:** Viết lượng code tối thiểu để test pass. Lúc này ưu tiên làm đúng behavior đã xác định, chưa cần tối ưu code.
+
+**Refactor:** Khi test đã pass, chỉnh sửa cấu trúc code để dễ đọc, dễ maintain hoặc giảm duplication, nhưng **không thay đổi behavior**. Sau mỗi thay đổi, chạy lại test để đảm bảo chức năng cũ vẫn đúng.
 
 ## 2. Unit vs Integration vs E2E
 
-Ba loại test khác nhau chủ yếu ở phạm vi và mức độ cô lập, không phải ở độ dài của test.
-Unit test
+**Unit test**
+
 Kiểm tra một đơn vị logic nhỏ như function hoặc class, giúp các hàm xử lý chuẩn xác nghiệp vụ. Ví dụ: tạo tickets thiếu title thì phải báo lỗi, filter không hợp lệ thì lỗi,.... Câu hỏi chính: Logic này đúng chưa?
-Integration test
+
+**Integration test**
+
 Kiểm tra nhiều thành phần module khi ghép lại với nhau . Ví dụ API nhận POST /users → Controller → UserService → UserRepository → ghi JSON file thật → trả response.. Câu hỏi chính: Các phần kết nối với nhau có chạy đúng không?
-E2E test
+
+**E2E test**
+
 Kiểm tra toàn bộ flow từ đầu đến cuối theo cách gần với người dùng thật. Ví dụ với CLI, test chạy command thật, truyền input và kiểm tra kết quả cuối cùng. Phạm vi rộng nhất, thường chậm và tốn công setup nhất nên chỉ cần tập trung vào các flow quan trọng. Câu hỏi chính: Người dùng có sử dụng hệ thống được không?
 
 ## 3. Ví dụ về hướng test cho Ticket Manager CLI
