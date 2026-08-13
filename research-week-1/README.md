@@ -30,3 +30,4 @@ Chi tiết workflow gắn với từng phần research nằm trong từng file v
 
 - Homework chính thức Week 1 yêu cầu research **TDD**.
 - Research **Hexagonal** là phần học thêm, áp dụng khi implement Week 2 ([`ticket-manager-cli/`](../ticket-manager-cli/)).
+- Source Week 2 hiện viết bằng **TypeScript**; hướng dẫn chạy lệnh xem [`ticket-manager-cli/README.md`](../ticket-manager-cli/README.md).

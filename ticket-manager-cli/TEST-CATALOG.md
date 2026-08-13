@@ -10,11 +10,11 @@ Hiện tại đang ở bước **TDD Green**:
 
 | Nhóm | File | Số test |
 |---|---|---:|
-| Unit — validation | `tests/unit/ticket-model.test.js` | 15 |
-| Unit — service | `tests/unit/ticket-service.test.js` | 11 |
-| Integration — JSON storage | `tests/integration/json-ticket-storage.test.js` | 4 |
-| Integration — CLI wiring | `tests/integration/cli.test.js` | 13 |
-| E2E | `tests/e2e/cli.e2e.test.js` | 1 |
+| Unit — validation | `tests/unit/ticket-model.test.ts` | 15 |
+| Unit — service | `tests/unit/ticket-service.test.ts` | 11 |
+| Integration — JSON storage | `tests/integration/json-ticket-storage.test.ts` | 4 |
+| Integration — CLI wiring | `tests/integration/cli.test.ts` | 13 |
+| E2E | `tests/e2e/cli.e2e.test.ts` | 1 |
 | **Tổng** |  | **44** |
 
 ## Cách chạy
@@ -31,7 +31,7 @@ npm run test:e2e
 
 ## 1. Unit — Validation (15 tests)
 
-File: `tests/unit/ticket-model.test.js`
+File: `tests/unit/ticket-model.test.ts`
 
 ### Hàm `validateCreateTicketInput(input)`
 
@@ -163,7 +163,7 @@ File: `tests/unit/ticket-model.test.js`
 
 ## 2. Unit — Service / nghiệp vụ (11 tests)
 
-File: `tests/unit/ticket-service.test.js`
+File: `tests/unit/ticket-service.test.ts`
 
 ### Hàm `createTicket(input)`
 
@@ -259,7 +259,7 @@ File: `tests/unit/ticket-service.test.js`
 
 ## 3. Integration — JSON storage (4 tests)
 
-File: `tests/integration/json-ticket-storage.test.js`
+File: `tests/integration/json-ticket-storage.test.ts`
 
 ### Hàm `saveTickets(tickets)` / `loadTickets()`
 
@@ -300,7 +300,7 @@ File: `tests/integration/json-ticket-storage.test.js`
 
 ## 4. Integration — CLI wiring (13 tests)
 
-File: `tests/integration/cli.test.js`
+File: `tests/integration/cli.test.ts`
 
 Nhóm này test `runCli(argv, io)`.
 
@@ -438,11 +438,11 @@ Nhóm này test `runCli(argv, io)`.
 
 ## 5. E2E (1 test)
 
-File: `tests/e2e/cli.e2e.test.js`
+File: `tests/e2e/cli.e2e.test.ts`
 
 42. `E2E happy path: create → list → show → update against temp JSON`
     (Luồng thật từ terminal: create → list → show → update)
-    - Đầu vào: chạy thật các lệnh
+    - Đầu vào: chạy thật các lệnh qua `npx tsx src/cli.ts ...`
       1. `create --title "Bug login" --description "cannot sign in" --tags bug,auth`
       2. `list --status open`
       3. `show <id vừa tạo>`

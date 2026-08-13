@@ -23,7 +23,7 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 
 ## Tóm tắt nhanh
 
-- Xây CLI quản lý ticket, lưu dữ liệu local bằng JSON.
+- Xây CLI quản lý ticket bằng **TypeScript**, lưu dữ liệu local bằng JSON.
 - Thực hành TDD: Red → Green → Refactor.
 - Tổ chức code theo Hexagonal Architecture: domain, application, inbound/outbound ports & adapters.
 - Các lệnh chính: `create`, `list`, `show`, `update`.
@@ -34,7 +34,13 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 cd ticket-manager-cli
 npm install
 npm test
-node src/cli.js --help
+npx tsx src/cli.ts list
+```
+
+Hoặc:
+
+```bash
+npm start -- list
 ```
 
 Chi tiết đầy đủ nằm trong README của từng folder, không nằm ở file này.

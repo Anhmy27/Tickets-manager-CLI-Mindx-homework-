@@ -18,8 +18,10 @@ Mục tiêu:
 ## Liên quan
 
 - Research Week 1 (TDD + Hexagonal): [`research-week-1/`](../research-week-1/)
-- Source code CLI: [`ticket-manager-cli/`](../ticket-manager-cli/)
+- Source code CLI (TypeScript + Hexagonal): [`ticket-manager-cli/`](../ticket-manager-cli/)
 
 ## Ghi chú
 
 Folder này nằm ở root repository và đã được mở trong `.gitignore`, nên có thể add/commit/push lên GitHub.
+
+Nội dung chat export bên dưới phản ánh quá trình làm lúc code còn JavaScript. Source hiện tại đã migrate sang TypeScript; xem hướng dẫn chạy mới nhất ở [`ticket-manager-cli/README.md`](../ticket-manager-cli/README.md).

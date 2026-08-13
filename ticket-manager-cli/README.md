@@ -1,8 +1,8 @@
 # Ticket Manager CLI
 
-Ticket Manager CLI là công cụ dòng lệnh dùng để quản lý ticket và lưu dữ liệu cục bộ trong file JSON.
+Ticket Manager CLI là công cụ dòng lệnh viết bằng **TypeScript**, dùng để quản lý ticket và lưu dữ liệu cục bộ trong file JSON.
 
-Dự án này được xây dựng cho Tuần 2 của MindX Engineer Onboarding với mục tiêu thực hành TDD theo vòng lặp Red -> Green -> Refactor. Code cũng được tổ chức theo hướng Hexagonal Architecture để tách rõ nghiệp vụ, use case, CLI adapter và JSON storage adapter.
+Dự án này được xây dựng cho Tuần 2 của MindX Engineer Onboarding với mục tiêu thực hành TDD theo vòng lặp Red -> Green -> Refactor. Code cũng được tổ chức theo hướng Hexagonal Architecture để tách rõ nghiệp vụ, use case, CLI adapter và JSON storage adapter. Port được định nghĩa bằng TypeScript `interface`; adapter/use case `implements` đúng contract đó.
 
 ## Trạng Thái
 
@@ -57,9 +57,9 @@ Outbound Adapter: JSON file storage
 
 - `domain/`: chứa lõi nghiệp vụ của ticket, gồm `Ticket` entity, validation rules và domain errors.
 - `application/`: chứa use case `TicketService`, điều phối luồng tạo/list/show/update ticket.
-- `application/ports/`: định nghĩa inbound port cho use case và outbound port cho repository.
-- `adapters/inbound/cli/`: nhận command từ terminal, parse arguments, gọi application service.
-- `adapters/outbound/json/`: hiện thực repository bằng file JSON.
+- `application/ports/`: định nghĩa inbound port (`TicketUseCasesInboundPort`) và outbound port (`TicketRepositoryOutboundPort`).
+- `adapters/inbound/cli/`: nhận command từ terminal, parse arguments, gọi application qua inbound port.
+- `adapters/outbound/json/`: hiện thực outbound port bằng file JSON (`JsonTicketRepository`).
 
 ## Cấu Trúc Thư Mục
 
@@ -84,6 +84,7 @@ ticket-manager-cli/
 ├── data/
 │   └── .gitkeep
 ├── package.json
+├── tsconfig.json
 └── README.md
 ```
 
@@ -103,10 +104,23 @@ npm install
 
 ## Hướng Dẫn Sử Dụng
 
-CLI có thể chạy trực tiếp bằng tsx:
+Chạy CLI bằng `tsx` (dev):
 
 ```bash
 npx tsx src/cli.ts <command>
+```
+
+Hoặc qua npm script:
+
+```bash
+npm start -- <command>
+```
+
+Sau khi build:
+
+```bash
+npm run build
+node dist/src/cli.js <command>
 ```
 
 Mặc định dữ liệu runtime được lưu tại:
@@ -203,15 +217,15 @@ Tính năng này hữu ích khi test hoặc muốn chạy thử mà không ghi v
 
 Ticket có shape chuẩn:
 
-```js
+```ts
 {
-  id: string,
-  title: string,
-  description: string,
-  status: 'open' | 'in_progress' | 'closed',
-  priority: 'low' | 'medium' | 'high',
-  tags: string[],
-  createdAt: string,
+  id: string
+  title: string
+  description: string
+  status: 'open' | 'in_progress' | 'closed'
+  priority: 'low' | 'medium' | 'high'
+  tags: string[]
+  createdAt: string
   updatedAt: string
 }
 ```
@@ -247,6 +261,12 @@ title is required
 
 ## Chạy Test
 
+Chạy typecheck:
+
+```bash
+npm run typecheck
+```
+
 Chạy toàn bộ test:
 
 ```bash
@@ -265,7 +285,9 @@ Các nhóm test:
 
 - Unit test: kiểm tra domain validation và use case logic.
 - Integration test: kiểm tra JSON storage và CLI wiring.
-- E2E test: chạy command thật từ terminal với file JSON tạm.
+- E2E test: chạy command thật từ terminal với file JSON tạm (`tsx src/cli.ts`).
+
+Chi tiết từng case nằm ở [`TEST-CATALOG.md`](./TEST-CATALOG.md).
 
 ## Ghi Chú Học TDD
 
