@@ -1,13 +1,19 @@
 # Tuần 1 — Research TDD cho Ticket Manager CLI
 
-##1. TDD và Red-Green-Refactor
+## 1. TDD và Red-Green-Refactor
+
 TDD là gì?
-TDD (Test-Driven Development) là cách phát triển trong đó viết test trước, rồi mới viết code. Mục đích cốt lõi của việc viết test trước và code sau giúp cho dev nắm rõ behavior của hệ thống, có một quy trình làm việc chuyên nghiệp, làm đến đâu chắc đến đấy, code chuẩn, đủ và không bị thừa so với scope để tránh những trường hợp code rác, ko hợp lý. đặc biệt là viết unit test trước cũng giúp dev thiết kế hệ thống tốt hơn, tách module chuẩn chỉ, giảm tải việc một file làm rất nhiều việc( đặc điểm rất dễ gặp nếu code trước rồi mới test). Đặc biệt với việc AI gần như giúp việc viết code như hiện nay thì TDD lại càng trở lên quan trọng. dev sẽ là người cần test và kiểm tra lại xem AI code như thế nào.
+  TDD (Test-Driven Development) là cách phát triển trong đó viết test trước, rồi mới viết code. Test không chỉ để kiểm tra code mà còn giúp mình xác định rõ hành vi của hệ thống phải như thế nào.
+  
+Mục đích cốt lõi của việc viết test trước và code sau giúp cho dev có một quy trình làm việc chuyên nghiệp, làm đến đâu chắc đến đấy, code chuẩn, đủ và không bị thừa so với scope để tránh những trường hợp code rác, ko hợp lý. đặc biệt là viết unit test trước cũng giúp dev thiết kế hệ thống tốt hơn, tách module chuẩn chỉ, giảm tải việc một file làm rất nhiều việc( đặc điểm rất dễ gặp nếu code trước rồi mới test). 
 Red-Green-Refactor
 Red: Viết test trước rồi chạy test. Test phải fail vì chức năng chưa được implement hoặc chưa đúng.
 Green: Viết lượng code tối thiểu để test pass. Lúc này ưu tiên làm đúng behavior đã xác định, chưa cần tối ưu code.
 Refactor: Khi test đã pass, chỉnh sửa cấu trúc code để dễ đọc, dễ maintain hoặc giảm duplication, nhưng không thay đổi behavior. Sau mỗi thay đổi, chạy lại test để đảm bảo chức năng cũ vẫn đúng.
-##2. Unit vs Integration vs E2E
+
+## 2. Unit vs Integration vs E2E
+
+Ba loại test khác nhau chủ yếu ở phạm vi và mức độ cô lập, không phải ở độ dài của test.
 Unit test
 Kiểm tra một đơn vị logic nhỏ như function hoặc class, giúp các hàm xử lý chuẩn xác nghiệp vụ. Ví dụ: tạo tickets thiếu title thì phải báo lỗi, filter không hợp lệ thì lỗi,.... Câu hỏi chính: Logic này đúng chưa?
 Integration test
@@ -23,19 +29,17 @@ Lấy lệnh `create` làm ví dụ. Mỗi cấp test sẽ trả lời một câ
 
 Unit test nên tách riêng validation và service, không đụng file thật. Storage được mock, test chỉ quan tâm hành vi trong memory.
 Với `create`, nên kiểm tra:
-
 - Title rỗng phải báo lỗi
 - Title hợp lệ thì ticket có `id`
 - Status mặc định là `open`
 - Priority có giá trị mặc định nếu user không truyền
 - Service create xong phải gọi lưu đúng một lần với dữ liệu đúng shape
-  Không cần biết ticket được lưu vào đâu. Unit test chỉ cần biết service có gọi lưu đúng hay không.
+Không cần biết ticket được lưu vào đâu. Unit test chỉ cần biết service có gọi lưu đúng hay không.
 
 ### Integration test — các phần nối với nhau có chạy không?
 
 Integration test dùng file JSON thật trong thư mục tạm, không mock storage nữa.
 Với `create`, nên kiểm tra:
-
 - Gọi service create xong thì mở file JSON thấy ticket mới trong file
 - Field đọc lại khớp với dữ liệu đã tạo
 - File chưa tồn tại thì app tự tạo
@@ -47,58 +51,52 @@ E2E test không gọi trực tiếp hàm `create` trong code. Test chạy đúng
 Ví dụ:
 tickets create --title "Bug login"
 Kỳ vọng:
-
 - Terminal báo tạo thành công
 - File lưu ticket có ticket mới
 - Nếu quên title thì chương trình báo lỗi rõ ràng
 - Khi lỗi xảy ra thì không tạo ticket sai
-  E2E chỉ nên viết ít, mỗi lệnh một case thành công là đủ. Case lỗi chi tiết như title rỗng, file hỏng, id không tồn tại nên để unit và integration test xử lý.
+E2E chỉ nên viết ít, mỗi lệnh một case thành công là đủ. Case lỗi chi tiết như title rỗng, file hỏng, id không tồn tại nên để unit và integration test xử lý.
 
 ## 4. Cách testing giúp kiểm soát code do AI sinh ra
 
 ### Cần test những gì cho CLI tool (VD: Ticket Manager CLI)
 
 Với Ticket Manager CLI, không nên chỉ test xem terminal có hiện chữ "success" hay không. CLI cần được test theo hành vi thật của người dùng và kết quả thật sau khi chạy lệnh.
-
 1. Test validation
-   CLI nhận input trực tiếp từ user, nên input sai phải được chặn sớm.
-   Ví dụ:
-
+CLI nhận input trực tiếp từ user, nên input sai phải được chặn sớm.
+Ví dụ:
 - `create` thiếu title thì phải báo lỗi
 - Status không hợp lệ thì bị reject
 - Priority sai thì không được lưu
 - Thiếu field bắt buộc thì không được tạo ticket
-
 2. Test service
-   Sau khi input hợp lệ thì service sẽ xử lý như thế nào?
-   ví dụ:
-
-- input hợp lệ thì sẽ gọi hàm tạo/update ticket với id, title chuẩn xác với những gì user nhập.
-- response trả về chuẩn xác.
-  **3. Test lưu file JSON**
-  Không chỉ kiểm tra màn hình báo thành công. Cần kiểm tra dữ liệu có thật sự được lưu đúng không.
-  Ví dụ:
+Sau khi input hợp lệ thì service sẽ xử lý như thế nào? 
+ví dụ: 
+- input hợp lệ thì sẽ gọi hàm tạo/update ticket với id, title chuẩn xác với những gì user nhập. 
+- response trả về chuẩn xác. 
+**3. Test lưu file JSON**
+Không chỉ kiểm tra màn hình báo thành công. Cần kiểm tra dữ liệu có thật sự được lưu đúng không.
+Ví dụ:
 - Create xong thì ticket phải có trong file JSON
 - `list` và `show` phải đọc đúng dữ liệu từ file
 - `update` phải ghi lại thay đổi đúng
 - File chưa tồn tại thì app nên tự tạo
 - File JSON bị hỏng thì phải báo lỗi rõ, không crash im lặng
-  **4. Test error cases**
-  Cần kiểm tra các lỗi thường gặp:
+**4. Test error cases**
+Cần kiểm tra các lỗi thường gặp:
 - Ticket id không tồn tại
 - Thiếu argument bắt buộc
 - Dữ liệu trong file bị corrupt
 - Command sai cú pháp
-  Mục tiêu là khi lỗi xảy ra, chương trình phải fail rõ ràng, không làm hỏng dữ liệu và không khiến user khó hiểu.
+Mục tiêu là khi lỗi xảy ra, chương trình phải fail rõ ràng, không làm hỏng dữ liệu và không khiến user khó hiểu.
 
 ### Testing kiểm soát AI như thế nào?
 
 Test là lớp kiểm soát nhanh,nhưng test pass chưa đủ. Vẫn cần tự verify:
-
 - Đọc code AI, hiểu nó làm gì trước khi dùng
 - Kiểm tra test có yếu không, ví dụ assertion mơ hồ hoặc thiếu case lỗi
 - Kiểm tra có hallucination không, ví dụ API giả hoặc logic không khớp yêu cầu
-  Test nói đúng/sai theo spec đã viết. Bạn vẫn là người quyết định spec đó có đủ và code có đáng tin không.
+Test nói đúng/sai theo spec đã viết. Bạn vẫn là người quyết định spec đó có đủ và code có đáng tin không.
 
 ## 5. Lỗi thường gặp
 
@@ -111,7 +109,6 @@ Nên luôn có thêm vài case lỗi quan trọng.
 
 Ví dụ chỉ kiểm tra “có kết quả trả về” hoặc “màn hình có chữ success”. Code vẫn có thể sai dữ liệu bên trong.
 Nên kiểm tra rõ:
-
 - Title có đúng không
 - Status có đúng mặc định không
 - Ticket có được lưu vào file không
