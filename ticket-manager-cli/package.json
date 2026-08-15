@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "start": "tsx src/cli.ts",
-    "test": "node --import tsx --test",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:unit": "node --import tsx --test tests/unit",
     "test:integration": "node --import tsx --test tests/integration",
     "test:e2e": "node --import tsx --test tests/e2e",

@@ -3,14 +3,12 @@ import type {
   ListTicketFiltersInput,
   TicketSnapshot,
   UpdateTicketInput,
-} from '../../domain/tickets/ticket.js'
+} from '../models/ticket.js'
 
 /**
- * Inbound port: ticket use cases exposed by the application layer.
- * Inbound adapters (CLI, HTTP, etc.) should call this contract instead of
- * depending on domain entities directly.
+ * Service contract consumed by command handlers.
  */
-export interface TicketUseCasesInboundPort {
+export interface TicketUseCases {
   createTicket(input: CreateTicketInput): Promise<TicketSnapshot>
   listTickets(filters?: ListTicketFiltersInput): Promise<TicketSnapshot[]>
   showTicket(id: unknown): Promise<TicketSnapshot>
@@ -18,9 +16,9 @@ export interface TicketUseCasesInboundPort {
 }
 
 export function assertTicketUseCases(
-  ticketUseCases: unknown
-): asserts ticketUseCases is TicketUseCasesInboundPort {
-  if (!ticketUseCases) {
+  useCases: unknown
+): asserts useCases is TicketUseCases {
+  if (!useCases) {
     throw new TypeError('Ticket use cases are required.')
   }
 
@@ -30,7 +28,7 @@ export function assertTicketUseCases(
     'showTicket',
     'updateTicket',
   ] as const) {
-    if (typeof (ticketUseCases as Record<string, unknown>)[methodName] !== 'function') {
+    if (typeof (useCases as Record<string, unknown>)[methodName] !== 'function') {
       throw new TypeError(`Ticket use cases must implement ${methodName}().`)
     }
   }

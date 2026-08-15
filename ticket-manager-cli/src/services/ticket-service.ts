@@ -1,8 +1,8 @@
 /**
- * Application use cases for tickets.
+ * Service layer use cases for tickets.
  */
 
-import { NotFoundError } from '../../domain/shared/errors.js'
+import { NotFoundError } from '../models/errors.js'
 import {
   Ticket,
   type CreateTicketInput,
@@ -13,27 +13,27 @@ import {
   validateListFilters,
   validateTicketId,
   validateUpdateTicketInput,
-} from '../../domain/tickets/ticket.js'
+} from '../models/ticket.js'
 import {
-  assertTicketRepository,
-  type TicketRepositoryOutboundPort,
-} from '../ports/ticket-repository-outbound-port.js'
-import type { TicketUseCasesInboundPort } from '../ports/ticket-use-cases-inbound-port.js'
+  assertTicketStorage,
+  type TicketStorage,
+} from '../storage/ticket-storage-contract.js'
+import type { TicketUseCases } from './ticket-use-cases-contract.js'
 
 interface TicketServiceOptions {
   idGenerator?: () => string
   now?: () => string
 }
 
-export class TicketService implements TicketUseCasesInboundPort {
-  private readonly ticketRepository: TicketRepositoryOutboundPort
+export class TicketService implements TicketUseCases {
+  private readonly ticketStorage: TicketStorage
   private readonly idGenerator: () => string
   private readonly now: () => string
 
-  constructor(ticketRepository: unknown, options: TicketServiceOptions = {}) {
-    assertTicketRepository(ticketRepository)
+  constructor(ticketStorage: unknown, options: TicketServiceOptions = {}) {
+    assertTicketStorage(ticketStorage)
 
-    this.ticketRepository = ticketRepository
+    this.ticketStorage = ticketStorage
     this.idGenerator = options.idGenerator ?? createDefaultId
     this.now = options.now ?? (() => new Date().toISOString())
   }
@@ -44,9 +44,9 @@ export class TicketService implements TicketUseCasesInboundPort {
       input,
       timestamp: this.now(),
     }).toJSON()
-    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
+    const tickets = hydrateTickets(await this.ticketStorage.loadTickets())
 
-    await this.ticketRepository.saveTickets([...tickets, createdTicket])
+    await this.ticketStorage.saveTickets([...tickets, createdTicket])
 
     return createdTicket
   }
@@ -55,14 +55,14 @@ export class TicketService implements TicketUseCasesInboundPort {
     filters: ListTicketFiltersInput = {}
   ): Promise<TicketSnapshot[]> {
     const validatedFilters = validateListFilters(filters)
-    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
+    const tickets = hydrateTickets(await this.ticketStorage.loadTickets())
 
     return tickets.filter((ticket) => matchesFilters(ticket, validatedFilters))
   }
 
   async showTicket(id: unknown): Promise<TicketSnapshot> {
     const validatedId = validateTicketId(id)
-    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
+    const tickets = hydrateTickets(await this.ticketStorage.loadTickets())
     const ticket = tickets.find((item) => item.id === validatedId)
 
     if (!ticket) {
@@ -78,7 +78,7 @@ export class TicketService implements TicketUseCasesInboundPort {
   ): Promise<TicketSnapshot> {
     const validatedId = validateTicketId(id)
     validateUpdateTicketInput(input)
-    const tickets = hydrateTickets(await this.ticketRepository.loadTickets())
+    const tickets = hydrateTickets(await this.ticketStorage.loadTickets())
     const index = tickets.findIndex((item) => item.id === validatedId)
 
     if (index < 0) {
@@ -92,7 +92,7 @@ export class TicketService implements TicketUseCasesInboundPort {
     const updatedTickets = [...tickets]
     updatedTickets[index] = updatedTicket
 
-    await this.ticketRepository.saveTickets(updatedTickets)
+    await this.ticketStorage.saveTickets(updatedTickets)
 
     return updatedTicket
   }

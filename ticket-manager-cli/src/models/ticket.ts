@@ -2,7 +2,7 @@
  * Domain rules for Ticket Manager CLI (Week 2).
  */
 
-import { ValidationError } from '../shared/errors.js'
+import { ValidationError } from './errors.js'
 
 export const TICKET_STATUSES = ['open', 'in_progress', 'closed'] as const
 export const TICKET_PRIORITIES = ['low', 'medium', 'high'] as const

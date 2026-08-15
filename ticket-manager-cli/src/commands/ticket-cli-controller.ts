@@ -1,5 +1,5 @@
 /**
- * Inbound adapter / controller for the CLI.
+ * Command handlers and argument parsing for the CLI.
  */
 
 import { dirname, join, resolve } from 'node:path'
@@ -9,11 +9,13 @@ import {
   NotFoundError,
   StorageError,
   ValidationError,
-} from '../../../domain/shared/errors.js'
-import { assertTicketUseCases } from '../../../application/ports/ticket-use-cases-inbound-port.js'
-import type { TicketUseCasesInboundPort } from '../../../application/ports/ticket-use-cases-inbound-port.js'
-import { TicketService } from '../../../application/use-cases/ticket-service.js'
-import { JsonTicketRepository } from '../../outbound/json/json-ticket-repository.js'
+} from '../models/errors.js'
+import { TicketService } from '../services/ticket-service.js'
+import {
+  assertTicketUseCases,
+  type TicketUseCases,
+} from '../services/ticket-use-cases-contract.js'
+import { JsonTicketRepository } from '../storage/json-ticket-repository.js'
 
 type CliCommand = 'create' | 'list' | 'show' | 'update' | undefined | string
 
@@ -37,13 +39,10 @@ interface CliIo {
 }
 
 interface CliDependencies {
-  ticketUseCases?: TicketUseCasesInboundPort
+  ticketUseCases?: TicketUseCases
 }
 
-const packageRoot = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  '../../../..'
-)
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const DEFAULT_DATA_FILE = join(packageRoot, 'data', 'tickets.json')
 
 export async function runCli(
@@ -90,7 +89,7 @@ export async function runCli(
   }
 }
 
-function createDefaultTicketUseCases(dataFile: string): TicketUseCasesInboundPort {
+function createDefaultTicketUseCases(dataFile: string): TicketUseCases {
   const repository = new JsonTicketRepository(resolve(dataFile))
   return new TicketService(repository)
 }
@@ -138,7 +137,7 @@ export function parseCliArguments(argv: string[] = []): ParsedCliArguments {
 
 async function handleCreate(
   parsed: ParsedCliArguments,
-  ticketUseCases: TicketUseCasesInboundPort,
+  ticketUseCases: TicketUseCases,
   stdout: WritableLike
 ): Promise<number> {
   const createdTicket = await ticketUseCases.createTicket({
@@ -156,7 +155,7 @@ async function handleCreate(
 
 async function handleList(
   parsed: ParsedCliArguments,
-  ticketUseCases: TicketUseCasesInboundPort,
+  ticketUseCases: TicketUseCases,
   stdout: WritableLike
 ): Promise<number> {
   const tickets = await ticketUseCases.listTickets({
@@ -171,7 +170,7 @@ async function handleList(
 
 async function handleShow(
   parsed: ParsedCliArguments,
-  ticketUseCases: TicketUseCasesInboundPort,
+  ticketUseCases: TicketUseCases,
   stdout: WritableLike
 ): Promise<number> {
   const ticket = await ticketUseCases.showTicket(parsed.positionals[0])
@@ -182,7 +181,7 @@ async function handleShow(
 
 async function handleUpdate(
   parsed: ParsedCliArguments,
-  ticketUseCases: TicketUseCasesInboundPort,
+  ticketUseCases: TicketUseCases,
   stdout: WritableLike
 ): Promise<number> {
   const updatedTicket = await ticketUseCases.updateTicket(parsed.positionals[0], {

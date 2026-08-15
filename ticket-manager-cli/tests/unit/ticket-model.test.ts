@@ -1,13 +1,13 @@
 import * as assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { ValidationError } from '../../src/domain/shared/errors.js'
+import { ValidationError } from '../../src/models/errors.js'
 import {
   validateCreateTicketInput,
   validateListFilters,
   validateTicketId,
   validateUpdateTicketInput,
-} from '../../src/domain/tickets/ticket.js'
+} from '../../src/models/ticket.js'
 
 test('create validation: valid title normalizes defaults and optional fields', () => {
   const input = validateCreateTicketInput({

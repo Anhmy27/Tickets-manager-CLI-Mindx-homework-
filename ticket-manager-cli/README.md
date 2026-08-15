@@ -2,7 +2,7 @@
 
 Ticket Manager CLI là công cụ dòng lệnh viết bằng **TypeScript**, dùng để quản lý ticket và lưu dữ liệu cục bộ trong file JSON.
 
-Dự án này được xây dựng cho Tuần 2 của MindX Engineer Onboarding với mục tiêu thực hành TDD theo vòng lặp Red -> Green -> Refactor. Code cũng được tổ chức theo hướng Hexagonal Architecture để tách rõ nghiệp vụ, use case, CLI adapter và JSON storage adapter. Port được định nghĩa bằng TypeScript `interface`; adapter/use case `implements` đúng contract đó.
+Dự án này được xây dựng cho Tuần 2 của MindX Engineer Onboarding với mục tiêu thực hành TDD theo vòng lặp Red -> Green -> Refactor. Code hiện được tổ chức theo **layered architecture** để bám đúng yêu cầu tuần học: commands, services, models, storage.
 
 ## Trạng Thái
 
@@ -29,37 +29,30 @@ Kết quả mong đợi:
 
 ## Kiến Trúc
 
-Dự án dùng cấu trúc Hexagonal Architecture ở mức đơn giản:
+Dự án dùng layered architecture đơn giản:
 
 ```text
 User / Terminal
     |
     v
-Inbound Adapter: CLI
+Command Layer: parse and route CLI commands
     |
     v
-Inbound Port: Ticket use cases
+Service Layer: ticket use-case orchestration
     |
     v
-Application: TicketService
+Model Layer: ticket rules, entities, validation
     |
     v
-Domain: Ticket entity + validation rules
-    |
-    v
-Outbound Port: TicketRepository
-    |
-    v
-Outbound Adapter: JSON file storage
+Storage Layer: JSON file persistence
 ```
 
 ### Ý nghĩa từng layer
 
-- `domain/`: chứa lõi nghiệp vụ của ticket, gồm `Ticket` entity, validation rules và domain errors.
-- `application/`: chứa use case `TicketService`, điều phối luồng tạo/list/show/update ticket.
-- `application/ports/`: định nghĩa inbound port (`TicketUseCasesInboundPort`) và outbound port (`TicketRepositoryOutboundPort`).
-- `adapters/inbound/cli/`: nhận command từ terminal, parse arguments, gọi application qua inbound port.
-- `adapters/outbound/json/`: hiện thực outbound port bằng file JSON (`JsonTicketRepository`).
+- `commands/`: nhận command từ terminal, parse arguments, gọi service layer.
+- `services/`: chứa `TicketService`, điều phối luồng tạo/list/show/update ticket.
+- `models/`: chứa `Ticket` entity, validation rules và các custom error.
+- `storage/`: hiện thực lưu trữ ticket bằng file JSON (`JsonTicketRepository`).
 
 ## Cấu Trúc Thư Mục
 
@@ -67,16 +60,16 @@ Outbound Adapter: JSON file storage
 ticket-manager-cli/
 ├── src/
 │   ├── cli.ts
-│   ├── domain/
-│   │   ├── shared/errors.ts
-│   │   └── tickets/ticket.ts
-│   ├── application/
-│   │   ├── ports/ticket-repository-outbound-port.ts
-│   │   ├── ports/ticket-use-cases-inbound-port.ts
-│   │   └── use-cases/ticket-service.ts
-│   └── adapters/
-│       ├── inbound/cli/ticket-cli-controller.ts
-│       └── outbound/json/json-ticket-repository.ts
+│   ├── commands/ticket-cli-controller.ts
+│   ├── services/
+│   │   ├── ticket-service.ts
+│   │   └── ticket-use-cases-contract.ts
+│   ├── models/
+│   │   ├── errors.ts
+│   │   └── ticket.ts
+│   └── storage/
+│       ├── json-ticket-repository.ts
+│       └── ticket-storage-contract.ts
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -295,5 +288,5 @@ Dự án này bắt đầu từ test fail trước, sau đó mới implement cod
 
 - Biến yêu cầu thành test rõ ràng.
 - Kiểm soát code do AI sinh ra.
-- Refactor kiến trúc sang Hexagonal mà vẫn giữ behavior đúng.
+- Refactor kiến trúc mà vẫn giữ behavior đúng.
 - Tự tin rằng các command CLI chính vẫn hoạt động sau khi sửa code.

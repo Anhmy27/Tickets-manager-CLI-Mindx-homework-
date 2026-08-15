@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { StorageError } from '../../src/domain/shared/errors.js'
-import { JsonTicketRepository } from '../../src/adapters/outbound/json/json-ticket-repository.js'
-import type { TicketSnapshot } from '../../src/domain/tickets/ticket.js'
+import { StorageError } from '../../src/models/errors.js'
+import { JsonTicketRepository } from '../../src/storage/json-ticket-repository.js'
+import type { TicketSnapshot } from '../../src/models/ticket.js'
 
 test('JsonTicketRepository: creates file and persists tickets', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'ticket-storage-'))

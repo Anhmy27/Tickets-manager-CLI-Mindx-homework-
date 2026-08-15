@@ -1,8 +1,8 @@
 import * as assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { NotFoundError, ValidationError } from '../../src/domain/shared/errors.js'
-import { TicketService } from '../../src/application/use-cases/ticket-service.js'
+import { NotFoundError, ValidationError } from '../../src/models/errors.js'
+import { TicketService } from '../../src/services/ticket-service.js'
 
 test('createTicket: creates ticket with id, defaults, and saves once', async () => {
   const savedPayloads: unknown[] = []

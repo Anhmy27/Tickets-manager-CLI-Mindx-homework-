@@ -1,15 +1,15 @@
 /**
- * Outbound adapter: store tickets in a local JSON file.
+ * Storage layer: store tickets in a local JSON file.
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
-import type { TicketRepositoryOutboundPort } from '../../../application/ports/ticket-repository-outbound-port.js'
-import { StorageError } from '../../../domain/shared/errors.js'
-import type { TicketSnapshot } from '../../../domain/tickets/ticket.js'
+import { StorageError } from '../models/errors.js'
+import type { TicketSnapshot } from '../models/ticket.js'
+import type { TicketStorage } from './ticket-storage-contract.js'
 
-export class JsonTicketRepository implements TicketRepositoryOutboundPort {
+export class JsonTicketRepository implements TicketStorage {
   private readonly filePath: string
 
   constructor(filePath: string) {
