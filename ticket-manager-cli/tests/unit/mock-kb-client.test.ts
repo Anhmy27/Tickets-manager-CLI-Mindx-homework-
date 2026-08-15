@@ -147,3 +147,78 @@ test('add: rejects duplicated id if id is provided manually', async () => {
     ValidationError
   )
 })
+
+test('search: rejects empty query', async () => {
+  const client = new MockKBClient()
+
+  await assert.rejects(() => client.search({ query: '   ' }), ValidationError)
+})
+
+test('search: rejects invalid topK', async () => {
+  const client = new MockKBClient()
+
+  await assert.rejects(
+    () => client.search({ query: 'template', topK: 0 }),
+    ValidationError
+  )
+  await assert.rejects(
+    () => client.search({ query: 'template', topK: 1.5 }),
+    ValidationError
+  )
+})
+
+test('list: rejects missing nodePath', async () => {
+  const client = new MockKBClient()
+
+  await assert.rejects(() => client.list({ nodePath: '' }), ValidationError)
+})
+
+test('retrieve: rejects empty id', async () => {
+  const client = new MockKBClient()
+
+  await assert.rejects(() => client.retrieve('   '), ValidationError)
+})
+
+test('add: rejects missing title, content, or nodePath', async () => {
+  const client = new MockKBClient()
+
+  await assert.rejects(
+    () =>
+      client.add({
+        title: '',
+        content: 'body',
+        nodePath: '/templates/sms',
+      }),
+    ValidationError
+  )
+  await assert.rejects(
+    () =>
+      client.add({
+        title: 'SMS Template',
+        content: '',
+        nodePath: '/templates/sms',
+      }),
+    ValidationError
+  )
+  await assert.rejects(
+    () =>
+      client.add({
+        title: 'SMS Template',
+        content: 'body',
+        nodePath: '',
+      }),
+    ValidationError
+  )
+})
+
+test('add: normalizes tags from comma string', async () => {
+  const client = new MockKBClient()
+  const created = await client.add({
+    title: 'SMS Template',
+    content: 'Your code is 123456',
+    nodePath: '/templates/sms',
+    tags: 'sms, template, ',
+  })
+
+  assert.deepEqual(created.tags, ['sms', 'template'])
+})

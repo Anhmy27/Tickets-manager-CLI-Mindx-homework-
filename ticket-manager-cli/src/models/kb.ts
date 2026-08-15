@@ -28,5 +28,5 @@ export interface KbAddInput {
   title: string
   content: string
   nodePath: string
-  tags?: string[]
+  tags?: string[] | string
 }
