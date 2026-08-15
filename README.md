@@ -1,6 +1,6 @@
 # Tickets Manager CLI — MindX Homework
 
-Repository này chứa bài làm **Week 2: Ticket Manager CLI** của MindX Engineer Onboarding.
+Repository này chứa bài làm MindX Engineer Onboarding: **Tuần 2 Ticket Manager CLI** và **Tuần 3 Knowledge Base** (hiện đang ở bước mock client, chưa HTTP).
 
 Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới để đọc tài liệu chi tiết. README ở root này chỉ mang tính hướng dẫn định hướng.
 
@@ -9,7 +9,7 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 | Folder | Đọc gì ở đây? |
 |---|---|
 | [`research-week-1/`](./research-week-1/) | Research Week 1: TDD + Hexagonal Architecture (học thêm) |
-| [`ticket-manager-cli/`](./ticket-manager-cli/) | Source code CLI, kiến trúc Hexagonal, hướng dẫn cài đặt/dùng lệnh, và cách chạy test |
+| [`ticket-manager-cli/`](./ticket-manager-cli/) | Source code CLI, kiến trúc layered, hướng dẫn cài đặt/dùng lệnh ticket và `kb`, cách chạy test |
 | [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Export chat AI và ghi chú quá trình implement Week 2 |
 
 ## Nên đọc theo thứ tự
@@ -23,10 +23,11 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 
 ## Tóm tắt nhanh
 
-- Xây CLI quản lý ticket bằng **TypeScript**, lưu dữ liệu local bằng JSON.
+- Xây CLI bằng **TypeScript**: ticket lưu JSON local; KB đang dùng mock in-memory.
 - Thực hành TDD: Red → Green → Refactor.
-- Tổ chức code theo Hexagonal Architecture: domain, application, inbound/outbound ports & adapters.
-- Các lệnh chính: `create`, `list`, `show`, `update`.
+- Tổ chức code theo layered architecture: commands, services, models, storage, clients.
+- Lệnh ticket: `create`, `list`, `show`, `update`.
+- Lệnh KB (mock): `kb search`, `kb list`, `kb retrieve`, `kb add`.
 
 ## Chạy nhanh project
 
@@ -35,12 +36,14 @@ cd ticket-manager-cli
 npm install
 npm test
 npx tsx src/cli.ts list
+npx tsx src/cli.ts kb search "response" --top-k 3
 ```
 
 Hoặc:
 
 ```bash
 npm start -- list
+npm start -- kb search "response" --top-k 3
 ```
 
 Chi tiết đầy đủ nằm trong README của từng folder, không nằm ở file này.

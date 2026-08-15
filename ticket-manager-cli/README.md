@@ -1,12 +1,12 @@
 # Ticket Manager CLI
 
-Ticket Manager CLI là công cụ dòng lệnh viết bằng **TypeScript**, dùng để quản lý ticket và lưu dữ liệu cục bộ trong file JSON.
+Ticket Manager CLI là công cụ dòng lệnh viết bằng **TypeScript**, dùng để quản lý ticket (lưu JSON cục bộ) và truy vấn Knowledge Base.
 
-Dự án này được xây dựng cho Tuần 2 của MindX Engineer Onboarding với mục tiêu thực hành TDD theo vòng lặp Red -> Green -> Refactor. Code hiện được tổ chức theo **layered architecture** để bám đúng yêu cầu tuần học: commands, services, models, storage.
+Dự án bắt đầu từ Tuần 2 (ticket + TDD) và đang ở **Tuần 3, bước mock**: lệnh `kb` chạy với `MockKBClient` in-memory, chưa gọi HTTP API. Code được tổ chức theo **layered architecture**: commands, services, models, storage, clients.
 
 ## Trạng Thái
 
-Hiện tại các chức năng tuần 2 đã được implement và test đang pass.
+Ticket tuần 2 và KB mock tuần 3 đã implement; `npm test` đang pass.
 
 ```bash
 npm test
@@ -15,7 +15,7 @@ npm test
 Kết quả mong đợi:
 
 ```text
-44 pass / 0 fail
+86 pass / 0 fail
 ```
 
 ## Chức Năng Chính
@@ -26,6 +26,10 @@ Kết quả mong đợi:
 | `list` | Liệt kê ticket, có thể filter theo status, priority, tags |
 | `show <id>` | Xem chi tiết một ticket theo id |
 | `update <id>` | Cập nhật status của ticket |
+| `kb search <query>` | Tìm document KB theo title/content |
+| `kb list --node <path>` | Liệt kê document trong một nhánh KB |
+| `kb retrieve <id>` | Xem đầy đủ một document KB |
+| `kb add --file --path` | Thêm document từ file markdown vào mock KB |
 
 ## Kiến Trúc
 
@@ -37,11 +41,16 @@ User / Terminal
     v
 Command Layer: parse and route CLI commands
     |
-    v
-Service Layer: ticket use-case orchestration
-    |
-    v
-Model Layer: ticket rules, entities, validation
+    +------------------+------------------+
+    |                                     |
+    v                                     v
+Service Layer                      Client Layer
+ticket use-case                    KbClient contract
+orchestration                      MockKBClient (in-memory)
+    |                                     |
+    v                                     v
+Model Layer                        Model Layer
+ticket rules                       KB document types
     |
     v
 Storage Layer: JSON file persistence
@@ -49,10 +58,11 @@ Storage Layer: JSON file persistence
 
 ### Ý nghĩa từng layer
 
-- `commands/`: nhận command từ terminal, parse arguments, gọi service layer.
+- `commands/`: nhận command từ terminal, parse arguments; ticket thì gọi service, `kb` thì gọi KB client.
 - `services/`: chứa `TicketService`, điều phối luồng tạo/list/show/update ticket.
-- `models/`: chứa `Ticket` entity, validation rules và các custom error.
+- `models/`: chứa `Ticket`, kiểu KB (`KbDocument`, ...), validation rules và custom error.
 - `storage/`: hiện thực lưu trữ ticket bằng file JSON (`JsonTicketRepository`).
+- `clients/`: hợp đồng `KbClient` và `MockKBClient` (dữ liệu mẫu trong RAM). HTTP client chưa có.
 
 ## Cấu Trúc Thư Mục
 
@@ -61,11 +71,15 @@ ticket-manager-cli/
 ├── src/
 │   ├── cli.ts
 │   ├── commands/ticket-cli-controller.ts
+│   ├── clients/
+│   │   ├── kb-client-contract.ts
+│   │   └── mock-kb-client.ts
 │   ├── services/
 │   │   ├── ticket-service.ts
 │   │   └── ticket-use-cases-contract.ts
 │   ├── models/
 │   │   ├── errors.ts
+│   │   ├── kb.ts
 │   │   └── ticket.ts
 │   └── storage/
 │       ├── json-ticket-repository.ts
@@ -76,6 +90,8 @@ ticket-manager-cli/
 │   └── e2e/
 ├── data/
 │   └── .gitkeep
+├── TEST-CATALOG.md
+├── test-mockKBClient.md
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -206,6 +222,59 @@ npx tsx src/cli.ts create --title "Bug login" --data-file ./tmp/tickets.json
 
 Tính năng này hữu ích khi test hoặc muốn chạy thử mà không ghi vào `data/tickets.json` mặc định.
 
+### Knowledge Base (mock)
+
+Hiện CLI luôn dùng `MockKBClient`: 3 document mẫu trong RAM, **không gọi HTTP**. Mỗi lần chạy lệnh là một process mới, nên `kb add` không còn sau khi lệnh kết thúc.
+
+Dữ liệu mẫu:
+
+```text
+/templates/email
+  doc-001  Customer Response Template
+  doc-003  Follow-up Email Template
+/team/devops
+  doc-002  DevOps Team Members
+```
+
+Tìm template:
+
+```bash
+npx tsx src/cli.ts kb search "response" --top-k 3
+```
+
+Liệt kê document trong một nhánh:
+
+```bash
+npx tsx src/cli.ts kb list --node /templates/email --limit 10
+```
+
+Tra cứu thông tin team:
+
+```bash
+npx tsx src/cli.ts kb list --node /team/devops
+```
+
+Xem đầy đủ một document:
+
+```bash
+npx tsx src/cli.ts kb retrieve doc-001
+```
+
+Thêm document từ file markdown (chỉ tồn tại trong process đó):
+
+```bash
+npx tsx src/cli.ts kb add --file ./new-template.md --path /templates/sms --tags sms
+```
+
+Các flag:
+
+- `kb search`: query positional bắt buộc; `--top-k` số nguyên dương, tùy chọn
+- `kb list`: `--node` bắt buộc; `--limit` số nguyên dương, tùy chọn
+- `kb retrieve`: id positional bắt buộc
+- `kb add`: `--file` và `--path` bắt buộc; `--tags` tùy chọn (chuỗi phân tách bằng dấu phẩy)
+
+Giống lệnh ticket, `kb` / `KB` và `search` / `SEARCH` đều được nhận.
+
 ## Rule Nghiệp Vụ
 
 Ticket có shape chuẩn:
@@ -239,6 +308,9 @@ CLI trả exit code `1` và in lỗi rõ ràng khi gặp các trường hợp:
 - Status hoặc priority không hợp lệ.
 - Không tìm thấy ticket theo id.
 - File JSON bị hỏng hoặc root JSON không phải array.
+- Thiếu query / `--node` / id / `--file` / `--path` cho lệnh `kb`.
+- `--top-k` hoặc `--limit` không phải số nguyên dương.
+- Không tìm thấy document KB theo id, hoặc file markdown `kb add` không tồn tại.
 
 Ví dụ:
 
@@ -250,6 +322,16 @@ Kết quả:
 
 ```text
 title is required
+```
+
+```bash
+npx tsx src/cli.ts kb retrieve missing-id
+```
+
+Kết quả:
+
+```text
+Document missing-id not found
 ```
 
 ## Chạy Test
@@ -276,11 +358,14 @@ npm run test:e2e
 
 Các nhóm test:
 
-- Unit test: kiểm tra domain validation và use case logic.
-- Integration test: kiểm tra JSON storage và CLI wiring.
-- E2E test: chạy command thật từ terminal với file JSON tạm (`tsx src/cli.ts`).
+- Unit test: kiểm tra domain validation, ticket use case, và `MockKBClient`.
+- Integration test: kiểm tra JSON storage và CLI wiring (ticket + `kb` với mock).
+- E2E test: chạy command thật từ terminal (`tsx src/cli.ts`) với file JSON tạm hoặc seed mock KB.
 
-Chi tiết từng case nằm ở [`TEST-CATALOG.md`](./TEST-CATALOG.md).
+Chi tiết từng case:
+
+- Ticket: [`TEST-CATALOG.md`](./TEST-CATALOG.md)
+- KB mock: [`test-mockKBClient.md`](./test-mockKBClient.md)
 
 ## Ghi Chú Học TDD
 
