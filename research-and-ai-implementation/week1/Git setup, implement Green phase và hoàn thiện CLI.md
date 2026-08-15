@@ -82,6 +82,6 @@ Hoàn thiện Ticket Manager CLI Week 2: implement business logic, làm test pas
 
 ## Bằng chứng tham khảo
 
-- Source: [`ticket-manager-cli/`](../ticket-manager-cli/)
-- Test catalog: [`ticket-manager-cli/TEST-CATALOG.md`](../ticket-manager-cli/TEST-CATALOG.md)
-- Research Week 1: [`research-week-1/`](../research-week-1/)
+- Source: [`ticket-manager-cli/`](../../ticket-manager-cli/)
+- Test catalog: [`ticket-manager-cli/TEST-CATALOG.md`](../../ticket-manager-cli/TEST-CATALOG.md)
+- Research Week 1: [`research-week-1/`](../../research-week-1/)

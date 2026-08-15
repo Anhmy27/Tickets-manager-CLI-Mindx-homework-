@@ -77,5 +77,5 @@ Chuẩn bị và triển khai Week 2 theo TDD: từ research → scaffold projec
 
 ## Bằng chứng tham khảo
 
-- Research Week 1 đầy đủ: [`research-week-1/`](../research-week-1/)
+- Research Week 1 đầy đủ: [`research-week-1/`](../../research-week-1/)
 - ChatGPT research links: xem cuối `research-week-1/research-tdd-ticket-manager-cli.md`
