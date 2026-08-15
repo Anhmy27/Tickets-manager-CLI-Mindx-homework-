@@ -3,19 +3,20 @@
 Mục tiêu file này: cho bạn nhìn nhanh **hàm nào**, **đầu vào gì**, **mong đợi gì**.
 
 Hiện tại đang ở bước **TDD Green**:
+
 - code đã implement theo test
 - `npm test` hiện tại = **44 pass / 0 fail**
 
 ## Tổng số test
 
-| Nhóm | File | Số test |
-|---|---|---:|
-| Unit — validation | `tests/unit/ticket-model.test.ts` | 15 |
-| Unit — service | `tests/unit/ticket-service.test.ts` | 11 |
-| Integration — JSON storage | `tests/integration/json-ticket-storage.test.ts` | 4 |
-| Integration — CLI wiring | `tests/integration/cli.test.ts` | 13 |
-| E2E | `tests/e2e/cli.e2e.test.ts` | 1 |
-| **Tổng** |  | **44** |
+| Nhóm                       | File                                            | Số test |
+| -------------------------- | ----------------------------------------------- | ------: |
+| Unit — validation          | `tests/unit/ticket-model.test.ts`               |      15 |
+| Unit — service             | `tests/unit/ticket-service.test.ts`             |      11 |
+| Integration — JSON storage | `tests/integration/json-ticket-storage.test.ts` |       4 |
+| Integration — CLI wiring   | `tests/integration/cli.test.ts`                 |      13 |
+| E2E                        | `tests/e2e/cli.e2e.test.ts`                     |       1 |
+| **Tổng**                   |                                                 |  **44** |
 
 ## Cách chạy
 
@@ -72,6 +73,7 @@ File: `tests/unit/ticket-model.test.ts`
 
 **Test bổ sung:** `create validation: normalizes status and priority casing`
 (Status/priority viết hoa vẫn được normalize)
+
 - Đầu vào:
   ```js
   {
@@ -156,7 +158,9 @@ File: `tests/unit/ticket-model.test.ts`
     - Đầu vào: `{ status: 'closed' }`
     - Mong đợi:
       ```js
-      { status: 'closed' }
+      {
+        status: "closed";
+      }
       ```
 
 ---
@@ -226,7 +230,7 @@ File: `tests/unit/ticket-service.test.ts`
     (Chỉ update ticket mục tiêu, giữ field khác)
     - Đầu vào:
       ```js
-      updateTicket('1', { status: 'closed' })
+      updateTicket("1", { status: "closed" });
       ```
     - Setup: repo mock có ticket `1` và `2`
     - Mong đợi: ticket `1` thành `closed`, field khác giữ nguyên; ticket `2` không đổi
@@ -235,7 +239,7 @@ File: `tests/unit/ticket-service.test.ts`
     (Ticket không tồn tại thì not found)
     - Đầu vào:
       ```js
-      updateTicket('missing-id', { status: 'closed' })
+      updateTicket("missing-id", { status: "closed" });
       ```
     - Mong đợi: `NotFoundError`
 
@@ -243,7 +247,7 @@ File: `tests/unit/ticket-service.test.ts`
     (Status sai thì lỗi trước khi lưu)
     - Đầu vào:
       ```js
-      updateTicket('1', { status: 'done' })
+      updateTicket("1", { status: "done" });
       ```
     - Mong đợi: `ValidationError`
 
@@ -251,7 +255,7 @@ File: `tests/unit/ticket-service.test.ts`
     (Thiếu status thì lỗi trước khi đọc repo)
     - Đầu vào:
       ```js
-      updateTicket('1', {})
+      updateTicket("1", {});
       ```
     - Mong đợi: `ValidationError`, không gọi `loadTickets`
 
@@ -267,14 +271,16 @@ File: `tests/integration/json-ticket-storage.test.ts`
     (Tạo file và lưu ticket được)
     - Đầu vào `saveTickets`:
       ```js
-      [{
-        id: '1',
-        title: 'Bug login',
-        description: 'cannot sign in',
-        status: 'open',
-        priority: 'medium',
-        tags: ['bug']
-      }]
+      [
+        {
+          id: "1",
+          title: "Bug login",
+          description: "cannot sign in",
+          status: "open",
+          priority: "medium",
+          tags: ["bug"],
+        },
+      ];
       ```
     - Mong đợi: `loadTickets()` đọc lại đúng mảng trên; file có chữ `Bug login`
 
@@ -311,13 +317,18 @@ Nhóm này test `runCli(argv, io)`.
     - Đầu vào argv:
       ```js
       [
-        'create',
-        '--title', 'Bug login',
-        '--description', 'cannot sign in',
-        '--priority', 'high',
-        '--tags', 'bug,auth',
-        '--data-file', '<temp>/tickets.json'
-      ]
+        "create",
+        "--title",
+        "Bug login",
+        "--description",
+        "cannot sign in",
+        "--priority",
+        "high",
+        "--tags",
+        "bug,auth",
+        "--data-file",
+        "<temp>/tickets.json",
+      ];
       ```
     - Mong đợi: exit `0`; stdout có `Created ticket`; file có ticket với `title`, `description`, `status=open`, `priority=high`, `tags=['bug','auth']`
 
@@ -325,7 +336,7 @@ Nhóm này test `runCli(argv, io)`.
     (Thiếu title thì báo lỗi và không tạo file)
     - Đầu vào argv:
       ```js
-      ['create', '--data-file', '<temp>/tickets.json']
+      ["create", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `title is required`; file không được tạo
 
@@ -333,23 +344,38 @@ Nhóm này test `runCli(argv, io)`.
     (Priority sai thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['create', '--title', 'Bug login', '--priority', 'urgent', '--data-file', '<temp>/tickets.json']
+      [
+        "create",
+        "--title",
+        "Bug login",
+        "--priority",
+        "urgent",
+        "--data-file",
+        "<temp>/tickets.json",
+      ];
       ```
     - Mong đợi: exit `1`; stderr có `priority must be one of`
 
 **Test bổ sung:** `CLI create: accepts case-insensitive command and option names`
 (Command và option name viết hoa vẫn được nhận)
+
 - Đầu vào argv:
   ```js
   [
-    'CREATE',
-    '--TITLE', 'Bug login',
-    '--DESCRIPTION', 'cannot sign in',
-    '--STATUS', 'OPEN',
-    '--PRIORITY', 'HIGH',
-    '--TAGS', 'bug,auth',
-    '--DATA-FILE', '<temp>/tickets.json'
-  ]
+    "CREATE",
+    "--TITLE",
+    "Bug login",
+    "--DESCRIPTION",
+    "cannot sign in",
+    "--STATUS",
+    "OPEN",
+    "--PRIORITY",
+    "HIGH",
+    "--TAGS",
+    "bug,auth",
+    "--DATA-FILE",
+    "<temp>/tickets.json",
+  ];
   ```
 - Mong đợi: exit `0`; file có ticket với `status=open`, `priority=high`, `tags=['bug','auth']`
 
@@ -360,7 +386,7 @@ Nhóm này test `runCli(argv, io)`.
     - Setup: file có 2 ticket, 1 `open`, 1 `closed`
     - Đầu vào argv:
       ```js
-      ['list', '--status', 'open', '--data-file', '<temp>/tickets.json']
+      ["list", "--status", "open", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `0`; stdout có `Bug login`; không có `Docs update`
 
@@ -368,7 +394,7 @@ Nhóm này test `runCli(argv, io)`.
     (Status filter sai thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['list', '--status', 'done', '--data-file', '<temp>/tickets.json']
+      ["list", "--status", "done", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `status must be one of`
 
@@ -377,7 +403,7 @@ Nhóm này test `runCli(argv, io)`.
     - Setup: file chứa `{ not valid json`
     - Đầu vào argv:
       ```js
-      ['list', '--data-file', '<temp>/tickets.json']
+      ["list", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `corrupted`
 
@@ -387,7 +413,7 @@ Nhóm này test `runCli(argv, io)`.
     (Không thấy ticket thì báo not found)
     - Đầu vào argv:
       ```js
-      ['show', 'missing-id', '--data-file', '<temp>/tickets.json']
+      ["show", "missing-id", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `not found`
 
@@ -395,7 +421,7 @@ Nhóm này test `runCli(argv, io)`.
     (Thiếu id thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['show', '--data-file', '<temp>/tickets.json']
+      ["show", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `ticket id is required`
 
@@ -406,7 +432,14 @@ Nhóm này test `runCli(argv, io)`.
     - Setup: file có ticket id `1`, status `open`
     - Đầu vào argv:
       ```js
-      ['update', '1', '--status', 'closed', '--data-file', '<temp>/tickets.json']
+      [
+        "update",
+        "1",
+        "--status",
+        "closed",
+        "--data-file",
+        "<temp>/tickets.json",
+      ];
       ```
     - Mong đợi: exit `0`; stdout có `Updated ticket 1`; file có `status = 'closed'`; `title` giữ nguyên
 
@@ -414,7 +447,7 @@ Nhóm này test `runCli(argv, io)`.
     (Status update sai thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['update', '1', '--status', 'done', '--data-file', '<temp>/tickets.json']
+      ["update", "1", "--status", "done", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `status must be one of`
 
@@ -422,7 +455,7 @@ Nhóm này test `runCli(argv, io)`.
     (Thiếu id thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['update', '--status', 'closed', '--data-file', '<temp>/tickets.json']
+      ["update", "--status", "closed", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `ticket id is required`
 
@@ -430,7 +463,7 @@ Nhóm này test `runCli(argv, io)`.
     (Thiếu status thì báo lỗi rõ)
     - Đầu vào argv:
       ```js
-      ['update', '1', '--data-file', '<temp>/tickets.json']
+      ["update", "1", "--data-file", "<temp>/tickets.json"];
       ```
     - Mong đợi: exit `1`; stderr có `status is required`
 
@@ -455,14 +488,14 @@ File: `tests/e2e/cli.e2e.test.ts`
 
 ---
 
-## Rule nghiệp vụ đang bị khóa bởi test
+## Bảng thể hiện các rule mà test đang cover
 
-| Field | Rule |
-|---|---|
-| `title` | Bắt buộc, không rỗng sau trim |
-| `description` | Tùy chọn, trim chuỗi |
-| `status` | `open` \| `in_progress` \| `closed`, mặc định `open` |
-| `priority` | `low` \| `medium` \| `high`, mặc định `medium` |
-| `tags` | Tự do, nhận chuỗi `"a,b"` hoặc mảng; mặc định `[]` |
-| `id` | Bắt buộc cho `show` và `update` |
-| Storage | file thiếu → `[]`; JSON hỏng / không phải array → `StorageError` |
+| Field         | Rule                                                             |
+| ------------- | ---------------------------------------------------------------- |
+| `title`       | Bắt buộc, không rỗng sau trim                                    |
+| `description` | Tùy chọn, trim chuỗi                                             |
+| `status`      | `open` \| `in_progress` \| `closed`, mặc định `open`             |
+| `priority`    | `low` \| `medium` \| `high`, mặc định `medium`                   |
+| `tags`        | Tự do, nhận chuỗi `"a,b"` hoặc mảng; mặc định `[]`               |
+| `id`          | Bắt buộc cho `show` và `update`                                  |
+| Storage       | file thiếu → `[]`; JSON hỏng / không phải array → `StorageError` |
