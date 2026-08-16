@@ -1,19 +1,18 @@
 # Test Catalog — kb-api-client
 
-Mục tiêu file này: liệt kê chi tiết test **nội bộ package client thật** `kb-api-client`  
-(không gồm test gọi từ CLI — phần đó nằm ở `ticket-manager-cli/tests`).
+Mục tiêu file này: mô tả toàn bộ test của package `kb-api-client` (HTTP client thuần), tách biệt với test ở `ticket-manager-cli`.
 
 Hiện tại đang ở bước **TDD Green**:
 
 - `npm test` = **10 pass / 0 fail**
-- Test chia rõ unit và integration trong chính folder `kb-api-client/tests`
+- Chia rõ 2 lớp: `unit` và `integration`
 
 ## Tổng số test
 
 | Nhóm | File | Số test |
 |---|---|---:|
 | Unit — HTTPKBClient | `tests/unit/http-kb-client.test.ts` | 8 |
-| Integration — HTTPKBClient + HTTP server cục bộ | `tests/integration/http-kb-client.test.ts` | 2 |
+| Integration — HTTPKBClient + local HTTP server | `tests/integration/http-kb-client.test.ts` | 2 |
 | **Tổng** |  | **10** |
 
 ## Cách chạy
@@ -27,144 +26,79 @@ node --import tsx --test tests/integration/http-kb-client.test.ts
 
 ---
 
-## 1. Unit — HTTPKBClient (8 tests)
+## 1) Unit — HTTPKBClient (8 tests)
 
 File: `tests/unit/http-kb-client.test.ts`
 
-### Test 1
-
 1. `HTTPKBClient search: sends POST /search with query/topK`
-   - Setup: inject `fetchImpl` giả để bắt request
-   - Đầu vào:
-     ```js
-     client.search({ query: 'response', topK: 3 })
-     ```
-   - Mong đợi:
-     - URL gọi đúng: `http://localhost:4100/search`
-     - body đúng:
-       ```js
-       { query: 'response', topK: 3 }
-       ```
-     - dữ liệu trả về map đúng `id/title/nodePath`
-
-### Test 2
+   - Input: `search({ query: 'response', topK: 3 })`
+   - Expected:
+     - gọi `POST /search`
+     - body đúng `{ query, topK }`
+     - map response về `KbSearchResult[]`
 
 2. `HTTPKBClient retrieve: maps 404 to KBClientNotFoundError`
-   - Setup: `fetchImpl` trả status `404`
-   - Đầu vào:
-     ```js
-     client.retrieve('missing-id')
-     ```
-   - Mong đợi: ném `KBClientNotFoundError`
-
-### Test 3
+   - Input: `retrieve('missing-id')`
+   - Expected: ném `KBClientNotFoundError`
 
 3. `HTTPKBClient: maps 400 to KBClientValidationError`
-   - Setup: `fetchImpl` trả status `400`
-   - Đầu vào:
-     ```js
-     client.list({ nodePath: '' })
-     ```
-   - Mong đợi: ném `KBClientValidationError`
-
-### Test 4
+   - Input: request bị API trả `400`
+   - Expected: ném `KBClientValidationError`
 
 4. `HTTPKBClient list: sends POST /list with nodePath and limit`
-   - Setup: inject `fetchImpl` giả để bắt request
-   - Đầu vào:
-     ```js
-     client.list({ nodePath: '/templates/email', limit: 2 })
-     ```
-   - Mong đợi:
-     - URL gọi đúng: `http://localhost:4100/list`
-     - body đúng:
-       ```js
-       { nodePath: '/templates/email', limit: 2 }
-       ```
-
-### Test 5
+   - Input: `list({ nodePath: '/templates/email', limit: 2 })`
+   - Expected:
+     - gọi `POST /list`
+     - body đúng `{ nodePath, limit }`
 
 5. `HTTPKBClient retrieve: sends POST /retrieve with docId`
-   - Setup: inject `fetchImpl` giả
-   - Đầu vào:
-     ```js
-     client.retrieve('doc-001')
-     ```
-   - Mong đợi:
-     - URL gọi đúng: `http://localhost:4100/retrieve`
-     - body đúng:
-       ```js
-       { docId: 'doc-001' }
-       ```
-
-### Test 6
+   - Input: `retrieve('doc-001')`
+   - Expected:
+     - gọi `POST /retrieve`
+     - body đúng `{ docId: 'doc-001' }`
 
 6. `HTTPKBClient add: normalizes comma tags before POST /add`
-   - Setup: inject `fetchImpl` giả
-   - Đầu vào:
-     ```js
-     client.add({
-       title: 'new-template',
-       content: 'Body',
-       nodePath: '/templates/sms',
-       tags: 'sms, template, '
-     })
-     ```
-   - Mong đợi:
-     - body gửi đi có:
-       ```js
-       tags: ['sms', 'template']
-       ```
-
-### Test 7
+   - Input:
+     - `tags: 'sms, template, '`
+   - Expected:
+     - payload gửi đi có `tags: ['sms', 'template']`
 
 7. `HTTPKBClient: network error maps to KBClientRequestError`
-   - Setup: `fetchImpl` ném lỗi mạng (ví dụ `ECONNREFUSED`)
-   - Mong đợi: ném `KBClientRequestError`
-
-### Test 8
+   - Setup: `fetchImpl` ném lỗi mạng
+   - Expected: ném `KBClientRequestError`
 
 8. `HTTPKBClient: maps 500 to KBClientRequestError`
-   - Setup: `fetchImpl` trả status `500`
-   - Mong đợi: ném `KBClientRequestError`
+   - Setup: API trả `500`
+   - Expected: ném `KBClientRequestError`
 
 ---
 
-## 2. Integration — HTTPKBClient (2 tests)
+## 2) Integration — HTTPKBClient (2 tests)
 
 File: `tests/integration/http-kb-client.test.ts`
 
 1. `HTTPKBClient integration: call real HTTP endpoints`
    - Setup:
-     - spin up server HTTP cục bộ trong test
+     - spin up local HTTP server trong test
      - seed 3 document mẫu
-   - Luồng gọi:
-     - `search({ query: 'response', topK: 3 })`
-     - `list({ nodePath: '/templates/email', limit: 10 })`
-     - `retrieve('doc-001')`
-     - `add({ ... })`
-     - `retrieve(id vừa add)`
-   - Mong đợi:
-     - search/list/retrieve trả đúng dữ liệu seed
-     - add thành công
-     - retrieve theo id vừa tạo trả đúng doc mới
+   - Flow:
+     - `search` -> `list` -> `retrieve` -> `add` -> `retrieve(doc mới)`
+   - Expected:
+     - tất cả call thành công
+     - dữ liệu trả về đúng với seed + doc vừa add
 
 2. `HTTPKBClient integration: retrieve unknown id maps to not found error`
-   - Setup: dùng server cục bộ cùng seed
-   - Đầu vào:
-     ```js
-     client.retrieve('missing-id')
-     ```
-   - Mong đợi: ném `KBClientNotFoundError`
+   - Input: `retrieve('missing-id')`
+   - Expected: ném `KBClientNotFoundError`
 
 ---
 
-## Bảng thể hiện các rule mà test đang cover
+## Bảng rule đang cover
 
 | Chủ đề | Rule |
 |---|---|
-| API contract | Gọi đúng endpoint `POST /search`, `/list`, `/retrieve`, `/add` |
+| Endpoint contract | Gọi đúng `POST /search`, `/list`, `/retrieve`, `/add` |
 | Payload mapping | `query/topK`, `nodePath/limit`, `docId`, `title/content/nodePath/tags` |
-| Error mapping | `404 -> KBClientNotFoundError`, `400 -> KBClientValidationError` |
-| HTTP failure mapping | lỗi mạng hoặc `500` -> `KBClientRequestError` |
-| End-to-end ở mức client | Cùng một `HTTPKBClient` có thể search/list/retrieve/add/retrieve qua HTTP thật |
+| Input normalization | `tags` dạng chuỗi được chuẩn hóa thành mảng string |
+| Error mapping | `404 -> KBClientNotFoundError`, `400 -> KBClientValidationError`, `5xx/network -> KBClientRequestError` |
+| Integration confidence | Cùng một `HTTPKBClient` chạy được luồng search/list/retrieve/add với HTTP server thật |
