@@ -1,0 +1,22 @@
+{
+  "name": "kb-api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "HTTP client for Knowledge Base API",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}

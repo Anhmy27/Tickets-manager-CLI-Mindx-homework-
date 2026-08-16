@@ -3,5 +3,6 @@
 !/.gitignore
 !/README.md
 !/ticket-manager-cli/
+!/kb-api-client/
 !/research-week-1/
 !/research-and-ai-implementation/
