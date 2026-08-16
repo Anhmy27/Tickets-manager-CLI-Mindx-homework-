@@ -7,7 +7,7 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { assertKbClient, type KbClient } from '../clients/kb-client-contract.js'
-import { MockKBClient } from '../clients/mock-kb-client.js'
+import { createKbClientFromEnv } from '../clients/create-kb-client.js'
 import {
   NotFoundError,
   StorageError,
@@ -61,7 +61,7 @@ export async function runCli(
     const parsed = parseCliArguments(argv)
 
     if (parsed.command === 'kb') {
-      const kbClient = dependencies.kbClient ?? new MockKBClient()
+      const kbClient = dependencies.kbClient ?? createKbClientFromEnv()
       assertKbClient(kbClient)
       return await handleKbCommand(parsed, kbClient, stdout)
     }
