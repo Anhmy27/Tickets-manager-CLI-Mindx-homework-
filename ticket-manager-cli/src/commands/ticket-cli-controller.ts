@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 import { assertKbClient, type KbClient } from '../clients/kb-client-contract.js'
 import { createKbClientFromEnv } from '../clients/create-kb-client.js'
+import { loadEnvFile } from '../config/load-env.js'
 import {
   NotFoundError,
   StorageError,
@@ -56,6 +57,8 @@ export async function runCli(
 ): Promise<number> {
   const stdout = io.stdout ?? process.stdout
   const stderr = io.stderr ?? process.stderr
+
+  loadEnvFile(join(packageRoot, '.env'))
 
   try {
     const parsed = parseCliArguments(argv)

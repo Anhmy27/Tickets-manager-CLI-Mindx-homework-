@@ -4,9 +4,10 @@ Mục tiêu file này: nhìn nhanh phần test KB ở **phía CLI** (`ticket-man
 
 Hiện tại đang ở bước **TDD Green**:
 
-- `npm test` hiện tại = **92 pass / 0 fail**
+- `npm test` hiện tại = **95 pass / 0 fail**
 - Mock flow vẫn giữ nguyên
 - Đã thêm flow HTTP client thật (qua adapter)
+- CLI load `ticket-manager-cli/.env` lúc `runCli`
 
 ## Tổng số test KB phía CLI
 
@@ -16,9 +17,10 @@ Hiện tại đang ở bước **TDD Green**:
 | Integration — CLI + MockKBClient | `tests/integration/kb-cli-mock.test.ts` | 20 |
 | E2E — terminal + mock seed | `tests/e2e/kb-cli.e2e.test.ts` | 2 |
 | Unit — chọn client theo env | `tests/unit/create-kb-client.test.ts` | 3 |
+| Unit — load `.env` | `tests/unit/load-env.test.ts` | 3 |
 | Unit — CLI gọi đúng contract KbClient | `tests/unit/kb-cli-client-wiring.test.ts` | 1 |
 | Integration — CLI + HTTP adapter | `tests/integration/kb-cli-real-client.test.ts` | 2 |
-| **Tổng KB phía CLI** |  | **47** |
+| **Tổng KB phía CLI** |  | **50** |
 
 ## Đã tăng bao nhiêu test?
 
@@ -28,11 +30,11 @@ Trước khi thêm client thật, phần KB ở CLI có:
 
 Sau khi thêm client thật, tăng:
 
-- `3 + 1 + 2 = 6` test mới
+- `3 + 1 + 2 + 3 = 9` test mới (HTTP wiring + load `.env`)
 
 Tổng hiện tại:
 
-- `41 + 6 = 47` test KB phía CLI
+- `41 + 9 = 50` test KB phía CLI
 
 ## Cách chạy nhanh
 
@@ -42,6 +44,7 @@ node --import tsx --test tests/unit/mock-kb-client.test.ts
 node --import tsx --test tests/integration/kb-cli-mock.test.ts
 node --import tsx --test tests/e2e/kb-cli.e2e.test.ts
 node --import tsx --test tests/unit/create-kb-client.test.ts
+node --import tsx --test tests/unit/load-env.test.ts
 node --import tsx --test tests/unit/kb-cli-client-wiring.test.ts
 node --import tsx --test tests/integration/kb-cli-real-client.test.ts
 ```
@@ -75,6 +78,24 @@ File: `tests/unit/create-kb-client.test.ts`
      }
      ```
    - Mong đợi: `ValidationError`
+
+---
+
+## 1b. Unit — Load `.env` (3 tests)
+
+File: `tests/unit/load-env.test.ts`
+
+1. `loadEnvFile: reads KEY=VALUE and skips comments`
+   - Đầu vào: file `.env` có comment + `KB_CLIENT_MODE=http` + `KB_API_BASE_URL="http://127.0.0.1:4100"`
+   - Mong đợi: env object nhận đúng 2 key; quote được bỏ
+
+2. `loadEnvFile: does not override existing env values`
+   - Đầu vào: `env.KB_CLIENT_MODE` đã là `mock`; file ghi `http`
+   - Mong đợi: vẫn là `mock` (shell thắng file)
+
+3. `loadEnvFile: missing file is ignored`
+   - Đầu vào: path không tồn tại
+   - Mong đợi: không throw; env object không đổi
 
 ---
 
@@ -138,7 +159,8 @@ File: `tests/integration/kb-cli-real-client.test.ts`
 
 | Field / luồng | Rule |
 |---|---|
-| `KB_CLIENT_MODE` | Không set -> dùng mock; `http` -> dùng HTTP adapter |
+| `KB_CLIENT_MODE` | Không set / `.env` = `mock` -> dùng mock; `http` -> dùng HTTP adapter. Shell thắng `.env`. |
 | `KB_API_BASE_URL` | Bắt buộc khi `KB_CLIENT_MODE=http` |
+| `.env` | CLI load `ticket-manager-cli/.env` lúc `runCli`; file thiếu thì bỏ qua |
 | CLI -> `KbClient` contract | `kb search` truyền đúng `query` và `topK` |
 | CLI + HTTP adapter | `search/list/retrieve/add` chạy được qua HTTP server thật |

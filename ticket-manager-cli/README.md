@@ -277,15 +277,30 @@ Các flag:
 
 Giống lệnh ticket, `kb` / `KB` và `search` / `SEARCH` đều được nhận.
 
-Chuyển sang HTTP client thật:
+CLI đọc env từ `ticket-manager-cli/.env` (không ghi đè biến đã set trên shell). Copy `.env.example` nếu file `.env` chưa có:
 
 ```bash
-set KB_CLIENT_MODE=http
-set KB_API_BASE_URL=http://127.0.0.1:4100
+copy .env.example .env
+```
+
+| Biến | Ý nghĩa |
+| --- | --- |
+| `KB_CLIENT_MODE` | `mock` (mặc định) hoặc `http` |
+| `KB_API_BASE_URL` | Bắt buộc khi `KB_CLIENT_MODE=http` |
+
+Chuyển sang HTTP client thật: sửa `.env` thành `KB_CLIENT_MODE=http` và set `KB_API_BASE_URL`, rồi:
+
+```bash
 npx tsx src/cli.ts kb search "response" --top-k 3
 ```
 
-Nếu không set `KB_CLIENT_MODE`, CLI sẽ dùng mock.
+Hoặc set trên shell (PowerShell) — shell thắng `.env`:
+
+```powershell
+$env:KB_CLIENT_MODE="http"
+$env:KB_API_BASE_URL="http://127.0.0.1:4100"
+npx tsx src/cli.ts kb search "response" --top-k 3
+```
 
 ## Rule Nghiệp Vụ
 
