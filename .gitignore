@@ -4,5 +4,9 @@
 !/README.md
 !/ticket-manager-cli/
 !/kb-api-client/
+!/kb-api-server/
 !/research-week-1/
 !/research-and-ai-implementation/
+
+# Không commit dependencies cài local
+/kb-api-server/node_modules/
