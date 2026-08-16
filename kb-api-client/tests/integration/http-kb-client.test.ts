@@ -2,7 +2,10 @@ import * as assert from 'node:assert/strict'
 import { createServer, type IncomingMessage } from 'node:http'
 import { test } from 'node:test'
 
-import { HTTPKBClient } from '../../src/index.js'
+import {
+  HTTPKBClient,
+  KBClientNotFoundError,
+} from '../../src/index.js'
 
 test('HTTPKBClient integration: call real HTTP endpoints', async () => {
   const server = await startTestServer()
@@ -25,6 +28,17 @@ test('HTTPKBClient integration: call real HTTP endpoints', async () => {
     assert.equal(doc.id, 'doc-001')
     assert.equal(added.nodePath, '/templates/sms')
     assert.equal(retrievedAdded.id, added.id)
+  } finally {
+    await server.close()
+  }
+})
+
+test('HTTPKBClient integration: retrieve unknown id maps to not found error', async () => {
+  const server = await startTestServer()
+  const client = new HTTPKBClient({ baseUrl: server.baseUrl })
+
+  try {
+    await assert.rejects(() => client.retrieve('missing-id'), KBClientNotFoundError)
   } finally {
     await server.close()
   }
