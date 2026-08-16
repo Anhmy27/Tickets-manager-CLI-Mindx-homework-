@@ -288,7 +288,15 @@ copy .env.example .env
 | `KB_CLIENT_MODE` | `mock` (mặc định) hoặc `http` |
 | `KB_API_BASE_URL` | Bắt buộc khi `KB_CLIENT_MODE=http` |
 
-Chuyển sang HTTP client thật: sửa `.env` thành `KB_CLIENT_MODE=http` và set `KB_API_BASE_URL`, rồi:
+Để chạy HTTP mode end-to-end, mở terminal khác và start server cùng cấp:
+
+```bash
+cd ../kb-api-server
+npm install
+npm start
+```
+
+Sau đó quay lại CLI, sửa `.env` thành `KB_CLIENT_MODE=http` và set `KB_API_BASE_URL`, rồi:
 
 ```bash
 npx tsx src/cli.ts kb search "response" --top-k 3
