@@ -2,11 +2,11 @@
 
 Ticket Manager CLI là công cụ dòng lệnh viết bằng **TypeScript**, dùng để quản lý ticket (lưu JSON cục bộ) và truy vấn Knowledge Base.
 
-Dự án bắt đầu từ Tuần 2 (ticket + TDD) và đang ở **Tuần 3, bước mock**: lệnh `kb` chạy với `MockKBClient` in-memory, chưa gọi HTTP API. Code được tổ chức theo **layered architecture**: commands, services, models, storage, clients.
+Dự án bắt đầu từ Tuần 2 (ticket + TDD). Tuần 3 hỗ trợ 2 client cho lệnh `kb`: `MockKBClient` (in-memory) và HTTP client thật (qua package root `kb-api-client`). Code được tổ chức theo **layered architecture**: commands, services, models, storage, clients.
 
 ## Trạng Thái
 
-Ticket tuần 2 và KB mock tuần 3 đã implement; `npm test` đang pass.
+Ticket tuần 2 và KB tuần 3 (mock + HTTP wiring) đã implement; `npm test` đang pass.
 
 ```bash
 npm test
@@ -15,7 +15,7 @@ npm test
 Kết quả mong đợi:
 
 ```text
-86 pass / 0 fail
+92 pass / 0 fail
 ```
 
 ## Chức Năng Chính
@@ -46,7 +46,7 @@ Command Layer: parse and route CLI commands
     v                                     v
 Service Layer                      Client Layer
 ticket use-case                    KbClient contract
-orchestration                      MockKBClient (in-memory)
+orchestration                      MockKBClient / HTTP client adapter
     |                                     |
     v                                     v
 Model Layer                        Model Layer
@@ -62,7 +62,7 @@ Storage Layer: JSON file persistence
 - `services/`: chứa `TicketService`, điều phối luồng tạo/list/show/update ticket.
 - `models/`: chứa `Ticket`, kiểu KB (`KbDocument`, ...), validation rules và custom error.
 - `storage/`: hiện thực lưu trữ ticket bằng file JSON (`JsonTicketRepository`).
-- `clients/`: hợp đồng `KbClient` và `MockKBClient` (dữ liệu mẫu trong RAM). HTTP client chưa có.
+- `clients/`: hợp đồng `KbClient`, `MockKBClient`, và adapter để gọi HTTP client thật từ package root `kb-api-client`.
 
 ## Cấu Trúc Thư Mục
 
@@ -73,7 +73,9 @@ ticket-manager-cli/
 │   ├── commands/ticket-cli-controller.ts
 │   ├── clients/
 │   │   ├── kb-client-contract.ts
-│   │   └── mock-kb-client.ts
+│   │   ├── mock-kb-client.ts
+│   │   ├── http-kb-client-adapter.ts
+│   │   └── create-kb-client.ts
 │   ├── services/
 │   │   ├── ticket-service.ts
 │   │   └── ticket-use-cases-contract.ts
@@ -222,9 +224,9 @@ npx tsx src/cli.ts create --title "Bug login" --data-file ./tmp/tickets.json
 
 Tính năng này hữu ích khi test hoặc muốn chạy thử mà không ghi vào `data/tickets.json` mặc định.
 
-### Knowledge Base (mock)
+### Knowledge Base (mock + HTTP)
 
-Hiện CLI luôn dùng `MockKBClient`: 3 document mẫu trong RAM, **không gọi HTTP**. Mỗi lần chạy lệnh là một process mới, nên `kb add` không còn sau khi lệnh kết thúc.
+Mặc định CLI dùng `MockKBClient`: 3 document mẫu trong RAM. Mỗi lần chạy lệnh là một process mới, nên `kb add` không còn sau khi lệnh kết thúc.
 
 Dữ liệu mẫu:
 
@@ -275,6 +277,16 @@ Các flag:
 
 Giống lệnh ticket, `kb` / `KB` và `search` / `SEARCH` đều được nhận.
 
+Chuyển sang HTTP client thật:
+
+```bash
+set KB_CLIENT_MODE=http
+set KB_API_BASE_URL=http://127.0.0.1:4100
+npx tsx src/cli.ts kb search "response" --top-k 3
+```
+
+Nếu không set `KB_CLIENT_MODE`, CLI sẽ dùng mock.
+
 ## Rule Nghiệp Vụ
 
 Ticket có shape chuẩn:
@@ -310,7 +322,7 @@ CLI trả exit code `1` và in lỗi rõ ràng khi gặp các trường hợp:
 - File JSON bị hỏng hoặc root JSON không phải array.
 - Thiếu query / `--node` / id / `--file` / `--path` cho lệnh `kb`.
 - `--top-k` hoặc `--limit` không phải số nguyên dương.
-- Không tìm thấy document KB theo id, hoặc file markdown `kb add` không tồn tại.
+- Không tìm thấy document KB theo id, file markdown `kb add` không tồn tại, hoặc HTTP request tới KB API thất bại.
 
 Ví dụ:
 
@@ -358,14 +370,15 @@ npm run test:e2e
 
 Các nhóm test:
 
-- Unit test: kiểm tra domain validation, ticket use case, và `MockKBClient`.
-- Integration test: kiểm tra JSON storage và CLI wiring (ticket + `kb` với mock).
+- Unit test: kiểm tra domain validation, ticket use case, mock client, env client factory, và CLI-to-client wiring.
+- Integration test: kiểm tra JSON storage, CLI với mock client, và CLI với HTTP client adapter.
 - E2E test: chạy command thật từ terminal (`tsx src/cli.ts`) với file JSON tạm hoặc seed mock KB.
 
 Chi tiết từng case:
 
 - Ticket: [`TEST-CATALOG.md`](./TEST-CATALOG.md)
 - KB mock: [`test-mockKBClient.md`](./test-mockKBClient.md)
+- KB HTTP client package: [`../kb-api-client/README.md`](../kb-api-client/README.md)
 
 ## Ghi Chú Học TDD
 

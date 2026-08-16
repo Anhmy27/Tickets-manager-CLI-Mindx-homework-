@@ -1,8 +1,8 @@
 # Tickets Manager CLI — MindX Homework
 
-Repository này chứa bài làm MindX Engineer Onboarding: **Tuần 2 Ticket Manager CLI** và **Tuần 3 Knowledge Base** (hiện đang ở bước mock client, chưa HTTP).
+Repository này chứa bài làm MindX Engineer Onboarding: **Tuần 2 Ticket Manager CLI** và **Tuần 3 Knowledge Base** (mock client + HTTP client package riêng).
 
-Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới để đọc tài liệu chi tiết. README ở root này chỉ mang tính hướng dẫn định hướng.
+Nếu bạn mới mở link GitHub, hãy vào **4 folder chính** bên dưới để đọc tài liệu chi tiết. README ở root này chỉ mang tính hướng dẫn định hướng.
 
 ## Bắt đầu từ đâu?
 
@@ -10,6 +10,7 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 |---|---|
 | [`research-week-1/`](./research-week-1/) | Research Week 1: TDD + Hexagonal Architecture (học thêm) |
 | [`ticket-manager-cli/`](./ticket-manager-cli/) | Source code CLI, kiến trúc layered, hướng dẫn cài đặt/dùng lệnh ticket và `kb`, cách chạy test |
+| [`kb-api-client/`](./kb-api-client/) | HTTP client thật cho KB API (package riêng ở root), test riêng cho client |
 | [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Export chat AI và ghi chú quá trình implement Week 2 |
 
 ## Nên đọc theo thứ tự
@@ -23,11 +24,12 @@ Nếu bạn mới mở link GitHub, hãy vào **3 folder chính** bên dưới �
 
 ## Tóm tắt nhanh
 
-- Xây CLI bằng **TypeScript**: ticket lưu JSON local; KB đang dùng mock in-memory.
+- Xây CLI bằng **TypeScript**: ticket lưu JSON local; KB có cả mock in-memory và HTTP client.
 - Thực hành TDD: Red → Green → Refactor.
 - Tổ chức code theo layered architecture: commands, services, models, storage, clients.
+- Tách HTTP client thật thành package root `kb-api-client` để test độc lập.
 - Lệnh ticket: `create`, `list`, `show`, `update`.
-- Lệnh KB (mock): `kb search`, `kb list`, `kb retrieve`, `kb add`.
+- Lệnh KB: `kb search`, `kb list`, `kb retrieve`, `kb add` (mock hoặc HTTP qua env).
 
 ## Chạy nhanh project
 
