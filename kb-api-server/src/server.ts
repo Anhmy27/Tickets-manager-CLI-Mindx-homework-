@@ -1,4 +1,6 @@
 import { createServer, type Server } from 'node:http'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { handleKbRequest } from './controllers/kb-controller.js'
 import type { KbDocument } from './models/kb.js'
@@ -7,6 +9,7 @@ import { createDefaultKbService } from './services/kb-service.js'
 interface ServerOptions {
   host?: string
   port?: number
+  dataDir?: string
   seedDocuments?: KbDocument[]
 }
 
@@ -18,7 +21,11 @@ interface RunningServer {
 export async function startKbApiServer(options: ServerOptions = {}): Promise<RunningServer> {
   const host = options.host ?? '127.0.0.1'
   const port = options.port ?? 4100
-  const service = createDefaultKbService(options.seedDocuments)
+  const dataDir = options.dataDir ?? defaultDataDir()
+  const service = createDefaultKbService({
+    dataDir,
+    seedDocuments: options.seedDocuments,
+  })
 
   const server = createServer(async (request, response) => {
     try {
@@ -48,6 +55,10 @@ export async function startKbApiServer(options: ServerOptions = {}): Promise<Run
       await closeServer(server)
     },
   }
+}
+
+function defaultDataDir(): string {
+  return resolve(dirname(fileURLToPath(import.meta.url)), '..', 'data')
 }
 
 function listenServer(server: Server, host: string, port: number): Promise<void> {

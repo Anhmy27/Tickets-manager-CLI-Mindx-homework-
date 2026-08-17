@@ -8,9 +8,9 @@ import type {
   KbSearchResult,
 } from '../models/kb.js'
 import {
-  InMemoryKbRepository,
   type KbRepository,
 } from '../repositories/in-memory-kb-repository.js'
+import { FileSystemKbRepository } from '../repositories/file-system-kb-repository.js'
 
 export class KbService {
   constructor(private readonly repository: KbRepository) {}
@@ -81,8 +81,21 @@ export class KbService {
   }
 }
 
-export function createDefaultKbService(seedDocuments: KbDocument[] = defaultSeedDocuments()): KbService {
-  return new KbService(new InMemoryKbRepository(seedDocuments))
+interface CreateDefaultKbServiceOptions {
+  dataDir: string
+  seedDocuments?: KbDocument[]
+}
+
+export function createDefaultKbService(
+  options: CreateDefaultKbServiceOptions
+): KbService {
+  const seedDocuments = options.seedDocuments ?? defaultSeedDocuments()
+  return new KbService(
+    new FileSystemKbRepository({
+      dataDir: options.dataDir,
+      seedDocuments,
+    })
+  )
 }
 
 function defaultSeedDocuments(): KbDocument[] {
