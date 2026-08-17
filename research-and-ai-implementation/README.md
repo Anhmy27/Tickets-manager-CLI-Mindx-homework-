@@ -21,12 +21,13 @@ Phiên AI đầu (Week 1–2): research TDD, scaffold, test Red, git, Green phas
 
 ### [`week3/`](./week3/)
 
-Phiên AI tuần 3: mock-first, rồi HTTP client + KB API server.
+Phiên AI tuần 3: mock-first, HTTP client + KB API server, rồi persist disk.
 
 | File | Phiên AI làm gì |
 |---|---|
 | [`Implement MockKBClient, kb CLI, test và README.md`](./week3/Implement%20MockKBClient,%20kb%20CLI,%20test%20và%20README.md) | MockKBClient + lệnh `kb`, test/catalog/README; phiên còn gồm migrate TS và layered |
 | [`Implement HTTP KB client, kb-api-server, env và catalog.md`](./week3/Implement%20HTTP%20KB%20client,%20kb-api-server,%20env%20và%20catalog.md) | HTTP client (caller), `.env`, `kb-api-server` (listener) layered, unit/integration, dọn repo |
+| [`Persist KB documents to disk with index and markdown.md`](./week3/Persist%20KB%20documents%20to%20disk%20with%20index%20and%20markdown.md) | Chuyển persistence RAM → disk: `data/index.json` + `{id}.md` theo `nodePath`, TDD |
 
 ## Liên quan
 
@@ -40,4 +41,4 @@ Phiên AI tuần 3: mock-first, rồi HTTP client + KB API server.
 Folder này nằm ở root repository và đã được mở trong `.gitignore`, nên có thể add/commit/push lên GitHub.
 
 `week1,2/` phản ánh quá trình lúc code còn JavaScript / hexagonal rồi hoàn thiện CLI tuần 2.  
-`week3/` là mock KB rồi HTTP client + server. Source hiện tại: TypeScript + layered. Xem hướng dẫn chạy mới nhất ở [`README.md`](../README.md) root và [`ticket-manager-cli/README.md`](../ticket-manager-cli/README.md).
+`week3/` là mock KB, HTTP client + server, rồi persist disk. Source hiện tại: TypeScript + layered. Xem hướng dẫn chạy mới nhất ở [`README.md`](../README.md) root và [`ticket-manager-cli/README.md`](../ticket-manager-cli/README.md).
