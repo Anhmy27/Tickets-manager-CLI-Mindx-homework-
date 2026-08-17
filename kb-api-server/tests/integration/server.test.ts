@@ -1,30 +1,32 @@
 import * as assert from 'node:assert/strict'
+import { access, mkdtemp, rm, readFile } from 'node:fs/promises'
+import { constants } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
 
 import { startKbApiServer } from '../../src/server.js'
 
 test('KB API server: search/list/retrieve/add happy path', async () => {
-  const server = await startKbApiServer({ port: 0 })
-
-  try {
-    const searchResponse = await postJson(server.baseUrl, '/search', {
+  await withServer(async (baseUrl) => {
+    const searchResponse = await postJson(baseUrl, '/search', {
       query: 'response',
       topK: 3,
     })
-    const listResponse = await postJson(server.baseUrl, '/list', {
+    const listResponse = await postJson(baseUrl, '/list', {
       nodePath: '/templates/email',
       limit: 10,
     })
-    const retrieveResponse = await postJson(server.baseUrl, '/retrieve', {
+    const retrieveResponse = await postJson(baseUrl, '/retrieve', {
       docId: 'doc-001',
     })
-    const addResponse = await postJson(server.baseUrl, '/add', {
+    const addResponse = await postJson(baseUrl, '/add', {
       title: 'SMS Template',
       content: 'Your verification code is 123456',
       nodePath: '/templates/sms',
       tags: ['sms'],
     })
-    const retrieveAddedResponse = await postJson(server.baseUrl, '/retrieve', {
+    const retrieveAddedResponse = await postJson(baseUrl, '/retrieve', {
       docId: (addResponse.body as { id: string }).id,
     })
 
@@ -46,21 +48,15 @@ test('KB API server: search/list/retrieve/add happy path', async () => {
     const addedBody = addResponse.body as { id: string; nodePath: string }
     assert.match(addedBody.id, /^doc-/)
     assert.equal(addedBody.nodePath, '/templates/sms')
-  } finally {
-    await server.close()
-  }
+  })
 })
 
 test('KB API server: returns 400 for invalid payload', async () => {
-  const server = await startKbApiServer({ port: 0 })
-
-  try {
-    const response = await postJson(server.baseUrl, '/search', { query: '' })
+  await withServer(async (baseUrl) => {
+    const response = await postJson(baseUrl, '/search', { query: '' })
     assert.equal(response.status, 400)
     assert.match(String((response.body as { error: string }).error), /query is required/i)
-  } finally {
-    await server.close()
-  }
+  })
 })
 
 test('KB API server: returns 400 when search query missing', async () => {
@@ -118,15 +114,11 @@ test('KB API server: list returns empty array for unknown node', async () => {
 })
 
 test('KB API server: returns 404 for missing document', async () => {
-  const server = await startKbApiServer({ port: 0 })
-
-  try {
-    const response = await postJson(server.baseUrl, '/retrieve', { docId: 'missing-id' })
+  await withServer(async (baseUrl) => {
+    const response = await postJson(baseUrl, '/retrieve', { docId: 'missing-id' })
     assert.equal(response.status, 404)
     assert.match(String((response.body as { error: string }).error), /not found/i)
-  } finally {
-    await server.close()
-  }
+  })
 })
 
 test('KB API server: returns 400 when retrieve docId missing', async () => {
@@ -213,14 +205,10 @@ test('KB API server: add normalizes comma-separated tags', async () => {
 })
 
 test('KB API server: returns 405 for non-POST methods', async () => {
-  const server = await startKbApiServer({ port: 0 })
-
-  try {
-    const response = await fetch(`${server.baseUrl}/search`, { method: 'GET' })
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/search`, { method: 'GET' })
     assert.equal(response.status, 405)
-  } finally {
-    await server.close()
-  }
+  })
 })
 
 test('KB API server: returns 404 for unknown route', async () => {
@@ -231,10 +219,8 @@ test('KB API server: returns 404 for unknown route', async () => {
 })
 
 test('KB API server: returns 400 for invalid JSON body', async () => {
-  const server = await startKbApiServer({ port: 0 })
-
-  try {
-    const response = await fetch(`${server.baseUrl}/search`, {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/search`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: '{"query":',
@@ -242,17 +228,74 @@ test('KB API server: returns 400 for invalid JSON body', async () => {
     const payload = (await response.json()) as { error?: string }
     assert.equal(response.status, 400)
     assert.match(payload.error ?? '', /valid json/i)
+  })
+})
+
+test('KB API server: persists added document across server restart', async () => {
+  const dataDir = await mkdtemp(join(tmpdir(), 'kb-server-data-'))
+  const serverA = await startKbApiServer({ port: 0, dataDir })
+
+  try {
+    const addResponse = await postJson(serverA.baseUrl, '/add', {
+      title: 'Persistent Template',
+      content: 'This content should survive restart.',
+      nodePath: '/templates/email',
+      tags: ['template'],
+    })
+    assert.equal(addResponse.status, 200)
+    const created = addResponse.body as { id: string }
+
+    await serverA.close()
+    const serverB = await startKbApiServer({ port: 0, dataDir })
+    try {
+      const retrieveResponse = await postJson(serverB.baseUrl, '/retrieve', {
+        docId: created.id,
+      })
+      assert.equal(retrieveResponse.status, 200)
+      const retrieved = retrieveResponse.body as { id: string; content: string }
+      assert.equal(retrieved.id, created.id)
+      assert.match(retrieved.content, /survive restart/i)
+    } finally {
+      await serverB.close()
+    }
+  } finally {
+    await rm(dataDir, { recursive: true, force: true })
+  }
+})
+
+test('KB API server: writes index and markdown file on add', async () => {
+  const dataDir = await mkdtemp(join(tmpdir(), 'kb-server-data-'))
+  const server = await startKbApiServer({ port: 0, dataDir })
+
+  try {
+    const addResponse = await postJson(server.baseUrl, '/add', {
+      id: 'doc-custom',
+      title: 'Disk Layout Check',
+      content: 'Disk content body',
+      nodePath: '/team/devops',
+      tags: ['ops'],
+    })
+    assert.equal(addResponse.status, 200)
+
+    await access(join(dataDir, 'index.json'), constants.F_OK)
+    await access(join(dataDir, 'team', 'devops', 'doc-custom.md'), constants.F_OK)
+
+    const indexRaw = await readFile(join(dataDir, 'index.json'), 'utf8')
+    assert.match(indexRaw, /doc-custom/)
   } finally {
     await server.close()
+    await rm(dataDir, { recursive: true, force: true })
   }
 })
 
 async function withServer(task: (baseUrl: string) => Promise<void>): Promise<void> {
-  const server = await startKbApiServer({ port: 0 })
+  const dataDir = await mkdtemp(join(tmpdir(), 'kb-server-test-'))
+  const server = await startKbApiServer({ port: 0, dataDir })
   try {
     await task(server.baseUrl)
   } finally {
     await server.close()
+    await rm(dataDir, { recursive: true, force: true })
   }
 }
 
