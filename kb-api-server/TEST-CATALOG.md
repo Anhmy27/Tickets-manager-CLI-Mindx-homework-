@@ -4,7 +4,7 @@ Mục tiêu file này: liệt kê test cho `kb-api-server` (provider HTTP thật
 
 Hiện tại đang ở bước **TDD Green**:
 
-- `npm test` = **36 pass / 0 fail**
+- `npm test` = **41 pass / 0 fail**
 - Chia rõ 2 lớp: unit + integration
 
 ## Tổng số test
@@ -14,8 +14,9 @@ Hiện tại đang ở bước **TDD Green**:
 | Unit — KbService | `tests/unit/kb-service.test.ts` | 9 |
 | Unit — routeKbRequest | `tests/unit/kb-routes.test.ts` | 4 |
 | Unit — readPort | `tests/unit/env.test.ts` | 3 |
-| Integration — HTTP API contract | `tests/integration/server.test.ts` | 20 |
-| **Tổng** |  | **36** |
+| Unit — FileSystemKbRepository | `tests/unit/file-system-kb-repository.test.ts` | 3 |
+| Integration — HTTP API contract | `tests/integration/server.test.ts` | 22 |
+| **Tổng** |  | **41** |
 
 ## Cách chạy
 
@@ -110,7 +111,22 @@ File: `tests/unit/env.test.ts`
 
 ---
 
-## 4) Integration — HTTP API contract (20 tests)
+## 4) Unit — FileSystemKbRepository (3 tests)
+
+File: `tests/unit/file-system-kb-repository.test.ts`
+
+1. `initializes index and markdown files from seed`
+   - Mong đợi: tạo `index.json` và các file markdown theo `nodePath/id`
+
+2. `create persists across repository re-instantiation`
+   - Mong đợi: tạo doc mới, khởi tạo lại repository vẫn `findById` được
+
+3. `stores metadata in index.json`
+   - Mong đợi: metadata của doc mới được ghi vào `index.json`
+
+---
+
+## 5) Integration — HTTP API contract (22 tests)
 
 ### Happy path (1 test)
 
@@ -194,6 +210,17 @@ Rule cover:
 
 ---
 
+### Persistence on disk (2 tests)
+
+1. `persists added document across server restart`
+2. `writes index and markdown file on add`
+
+Rule cover:
+- dữ liệu được lưu trong `data/index.json` và `data/<nodePath>/<id>.md`
+- restart server vẫn retrieve được doc đã add trước đó
+
+---
+
 ## Bảng rule đang cover
 
 | Chủ đề | Rule |
@@ -201,6 +228,7 @@ Rule cover:
 | Service business rules | Validate input, normalize tags, detect duplicate id, map not-found |
 | Routing | Method/path dispatch đúng cho 4 endpoint |
 | Env parsing | `KB_API_PORT` phải là integer trong [1, 65535] |
+| Disk persistence | Ghi metadata vào `index.json`, ghi content vào `.md`, restart không mất dữ liệu |
 | Endpoint contract | Chỉ hỗ trợ `POST /search`, `/list`, `/retrieve`, `/add` |
 | Status mapping | Validation -> `400`, Not Found -> `404`, Method sai -> `405` |
 | Search/List params | `query`, `nodePath` bắt buộc; `topK`, `limit` phải là số nguyên dương |
