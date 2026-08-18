@@ -39,9 +39,14 @@ export function createDefaultKbDocuments(): KbDocument[] {
 
 export class MockKBClient implements KbClient {
   private readonly documents: KbDocument[]
+  private readonly generateId: () => string
 
-  constructor(documents: KbDocument[] = createDefaultKbDocuments()) {
+  constructor(
+    documents: KbDocument[] = createDefaultKbDocuments(),
+    generateId: () => string = generateMockDocumentId
+  ) {
     this.documents = documents.map((document) => cloneDocument(document))
+    this.generateId = generateId
   }
 
   async search(input: KbSearchInput): Promise<KbSearchResult[]> {
@@ -97,14 +102,7 @@ export class MockKBClient implements KbClient {
     const content = normalizeRequiredText(input.content, 'content is required')
     const nodePath = normalizeRequiredText(input.nodePath, 'nodePath is required')
     const tags = normalizeTags(input.tags)
-    const id =
-      input.id === undefined
-        ? this.createId()
-        : normalizeRequiredText(input.id, 'document id is required')
-
-    if (this.documents.some((document) => document.id === id)) {
-      throw new ValidationError(`Document ${id} already exists`)
-    }
+    const id = this.allocateUniqueId()
 
     const created: KbDocument = {
       id,
@@ -118,9 +116,20 @@ export class MockKBClient implements KbClient {
     return cloneDocument(created)
   }
 
-  private createId(): string {
-    return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  private allocateUniqueId(): string {
+    for (let attempt = 0; attempt < 32; attempt += 1) {
+      const id = this.generateId()
+      if (!this.documents.some((document) => document.id === id)) {
+        return id
+      }
+    }
+
+    throw new ValidationError('unable to generate a unique document id')
   }
+}
+
+function generateMockDocumentId(): string {
+  return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 function cloneDocument(document: KbDocument): KbDocument {

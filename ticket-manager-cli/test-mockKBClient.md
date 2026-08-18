@@ -115,9 +115,9 @@ Setup mặc định: `new MockKBClient()` với 3 document mẫu ở trên.
 16. `add: persists doc in in-memory dataset for next queries`
     - Mong đợi: `retrieve(id)` ra đúng doc; `list('/templates/sms')` có 1 doc; `search('123456')` ra đúng id
 
-17. `add: rejects duplicated id if id is provided manually`
-    - Đầu vào: `{ id: 'doc-001', ... }`
-    - Mong đợi: `ValidationError`
+17. `add: regenerates id when generated id already exists`
+    - Setup: hàm sinh id trả `doc-001` rồi `doc-999`
+    - Mong đợi: tạo doc với `id='doc-999'`; `retrieve('doc-001')` vẫn là seed gốc
 
 18. `add: rejects missing title, content, or nodePath`
     - Đầu vào: lần lượt title/content/nodePath rỗng

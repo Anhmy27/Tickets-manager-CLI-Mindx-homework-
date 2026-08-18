@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { MockKBClient } from '../../src/clients/mock-kb-client.js'
+import { createDefaultKbDocuments, MockKBClient } from '../../src/clients/mock-kb-client.js'
 import { NotFoundError, ValidationError } from '../../src/models/errors.js'
 
 test('search: returns matches by title', async () => {
@@ -132,20 +132,24 @@ test('add: persists doc in in-memory dataset for next queries', async () => {
   assert.equal(searched[0]?.id, created.id)
 })
 
-test('add: rejects duplicated id if id is provided manually', async () => {
-  const client = new MockKBClient()
+test('add: regenerates id when generated id already exists', async () => {
+  let calls = 0
+  const client = new MockKBClient(createDefaultKbDocuments(), () => {
+    calls += 1
+    return calls === 1 ? 'doc-001' : 'doc-999'
+  })
 
-  await assert.rejects(
-    () =>
-      client.add({
-        id: 'doc-001',
-        title: 'Duplicate Template',
-        content: 'Should not be added',
-        nodePath: '/templates/email',
-        tags: ['template'],
-      }),
-    ValidationError
-  )
+  const created = await client.add({
+    title: 'SMS Template',
+    content: 'Should be added',
+    nodePath: '/templates/sms',
+    tags: ['sms'],
+  })
+
+  assert.equal(created.id, 'doc-999')
+  assert.equal(calls, 2)
+  const original = await client.retrieve('doc-001')
+  assert.equal(original.title, 'Customer Response Template')
 })
 
 test('search: rejects empty query', async () => {

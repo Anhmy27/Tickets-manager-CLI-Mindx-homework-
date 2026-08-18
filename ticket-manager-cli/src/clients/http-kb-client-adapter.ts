@@ -66,7 +66,6 @@ export class HttpKbClientAdapter implements KbClient {
         title: input.title,
         content: input.content,
         nodePath: input.nodePath,
-        ...(input.id === undefined ? {} : { id: input.id }),
         ...(input.tags === undefined ? {} : { tags: input.tags }),
       }
       return await this.client.add(payload)
