@@ -23,7 +23,6 @@ export interface KbListInput {
 }
 
 export interface KbAddInput {
-  id?: string
   title: string
   content: string
   nodePath: string
