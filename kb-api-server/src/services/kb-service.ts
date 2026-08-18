@@ -7,13 +7,22 @@ import type {
   KbSearchRequest,
   KbSearchResult,
 } from '../models/kb.js'
-import {
-  type KbRepository,
-} from '../repositories/in-memory-kb-repository.js'
 import { FileSystemKbRepository } from '../repositories/file-system-kb-repository.js'
+import { type KbRepository } from '../repositories/in-memory-kb-repository.js'
+
+const MAX_ID_GENERATION_ATTEMPTS = 32
+
+type GenerateId = () => string
+
+function generateDocumentId(): string {
+  return `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+}
 
 export class KbService {
-  constructor(private readonly repository: KbRepository) {}
+  constructor(
+    private readonly repository: KbRepository,
+    private readonly generateId: GenerateId = generateDocumentId
+  ) {}
 
   search(input: KbSearchRequest): KbSearchResult[] {
     const query = normalizeRequiredText(input.query, 'query is required').toLowerCase()
@@ -59,17 +68,9 @@ export class KbService {
     const title = normalizeRequiredText(input.title, 'title is required')
     const content = normalizeRequiredText(input.content, 'content is required')
     const nodePath = normalizeRequiredText(input.nodePath, 'nodePath is required')
-    const id =
-      input.id === undefined
-        ? `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-        : normalizeRequiredText(input.id, 'id must not be empty')
-
-    if (this.repository.hasById(id)) {
-      throw new ValidationError('document id already exists')
-    }
 
     const created: KbDocument = {
-      id,
+      id: this.allocateUniqueId(),
       title,
       content,
       nodePath,
@@ -78,6 +79,17 @@ export class KbService {
 
     this.repository.create(created)
     return created
+  }
+
+  private allocateUniqueId(): string {
+    for (let attempt = 0; attempt < MAX_ID_GENERATION_ATTEMPTS; attempt += 1) {
+      const id = this.generateId()
+      if (!this.repository.hasById(id)) {
+        return id
+      }
+    }
+
+    throw new ValidationError('unable to generate a unique document id')
   }
 }
 

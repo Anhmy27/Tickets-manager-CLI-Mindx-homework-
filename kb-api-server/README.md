@@ -31,6 +31,8 @@ All endpoints use `POST` with JSON body:
 - `POST /retrieve` body `{ "docId": "doc-001" }`
 - `POST /add` body `{ "title": "...", "content": "...", "nodePath": "...", "tags": ["sms"] }`
 
+`id` không nằm trong input `/add`. Server tự sinh; nếu id vừa gen đã tồn tại thì gen lại (không ghi đè, không trả 400 vì trùng). Field `id` nếu client vẫn gửi kèm sẽ bị bỏ qua.
+
 Error format:
 
 ```json

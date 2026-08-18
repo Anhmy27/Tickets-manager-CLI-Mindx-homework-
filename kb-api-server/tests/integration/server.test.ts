@@ -177,15 +177,26 @@ test('KB API server: returns 400 when add tags type invalid', async () => {
   })
 })
 
-test('KB API server: returns 400 when add duplicate id', async () => {
+test('KB API server: add ignores client-provided id', async () => {
   await withServer(async (baseUrl) => {
     const response = await postJson(baseUrl, '/add', {
       id: 'doc-001',
-      title: 'Duplicated',
+      title: 'Should not overwrite',
       content: 'Body',
       nodePath: '/templates/sms',
     })
-    assertError(response, 400, /document id already exists/i)
+
+    assert.equal(response.status, 200)
+    const created = response.body as { id: string; title: string }
+    assert.notEqual(created.id, 'doc-001')
+    assert.equal(created.title, 'Should not overwrite')
+
+    const original = await postJson(baseUrl, '/retrieve', { docId: 'doc-001' })
+    assert.equal(original.status, 200)
+    assert.equal(
+      (original.body as { title: string }).title,
+      'Customer Response Template'
+    )
   })
 })
 
@@ -269,19 +280,19 @@ test('KB API server: writes index and markdown file on add', async () => {
 
   try {
     const addResponse = await postJson(server.baseUrl, '/add', {
-      id: 'doc-custom',
       title: 'Disk Layout Check',
       content: 'Disk content body',
       nodePath: '/team/devops',
       tags: ['ops'],
     })
     assert.equal(addResponse.status, 200)
+    const created = addResponse.body as { id: string }
 
     await access(join(dataDir, 'index.json'), constants.F_OK)
-    await access(join(dataDir, 'team', 'devops', 'doc-custom.md'), constants.F_OK)
+    await access(join(dataDir, 'team', 'devops', `${created.id}.md`), constants.F_OK)
 
     const indexRaw = await readFile(join(dataDir, 'index.json'), 'utf8')
-    assert.match(indexRaw, /doc-custom/)
+    assert.ok(indexRaw.includes(created.id))
   } finally {
     await server.close()
     await rm(dataDir, { recursive: true, force: true })

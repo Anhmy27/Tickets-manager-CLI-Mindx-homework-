@@ -61,9 +61,9 @@ File: `tests/unit/kb-service.test.ts`
    - Đầu vào: `tags='sms, otp, '`
    - Mong đợi: tạo doc mới thành công, tags được normalize thành `['sms', 'otp']`
 
-8. `KbService.add: rejects duplicated id`
-   - Đầu vào: `id='doc-001'` (đã tồn tại trong seed)
-   - Mong đợi: ném `ValidationError` (`document id already exists`)
+8. `KbService.add: regenerates id when generated id already exists`
+   - Setup: hàm sinh id trả `doc-001` (đã có) rồi `doc-999`
+   - Mong đợi: add thành công với `id='doc-999'`; seed `doc-001` không bị ghi đè
 
 9. `KbService.add: rejects invalid tags type`
    - Đầu vào: `tags=123`
@@ -186,13 +186,13 @@ Rule cover: `docId` bắt buộc; id không tồn tại trả `404`.
 2. `returns 400 when add content missing`
 3. `returns 400 when add nodePath missing`
 4. `returns 400 when add tags type invalid`
-5. `returns 400 when add duplicate id`
+5. `add ignores client-provided id`
 6. `add normalizes comma-separated tags`
 
 Rule cover:
 - `title/content/nodePath` bắt buộc
 - `tags` phải là chuỗi hoặc mảng string
-- `id` không được trùng
+- `id` không nhận từ client; server tự sinh và retry nếu trùng
 - `tags` dạng `"a, b, "` được normalize thành `["a", "b"]`
 
 ---
@@ -225,12 +225,12 @@ Rule cover:
 
 | Chủ đề | Rule |
 |---|---|
-| Service business rules | Validate input, normalize tags, detect duplicate id, map not-found |
+| Service business rules | Validate input, normalize tags, generate unique id (retry on collision), map not-found |
 | Routing | Method/path dispatch đúng cho 4 endpoint |
 | Env parsing | `KB_API_PORT` phải là integer trong [1, 65535] |
 | Disk persistence | Ghi metadata vào `index.json`, ghi content vào `.md`, restart không mất dữ liệu |
 | Endpoint contract | Chỉ hỗ trợ `POST /search`, `/list`, `/retrieve`, `/add` |
 | Status mapping | Validation -> `400`, Not Found -> `404`, Method sai -> `405` |
 | Search/List params | `query`, `nodePath` bắt buộc; `topK`, `limit` phải là số nguyên dương |
-| Add contract | `title/content/nodePath` bắt buộc, `tags` được normalize/validate, `id` không trùng |
+| Add contract | `title/content/nodePath` bắt buộc, `tags` được normalize/validate; `id` do server sinh, không nhận từ client |
 | Robust parsing | JSON body sai format trả lỗi rõ ràng (`400`) |

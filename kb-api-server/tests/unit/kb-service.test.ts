@@ -5,32 +5,34 @@ import { NotFoundError, ValidationError } from '../../src/errors/domain-errors.j
 import { InMemoryKbRepository } from '../../src/repositories/in-memory-kb-repository.js'
 import { KbService } from '../../src/services/kb-service.js'
 
-function createService(): KbService {
-  return new KbService(
-    new InMemoryKbRepository([
-      {
-        id: 'doc-001',
-        title: 'Customer Response Template',
-        content: 'Thank you for reaching out. We will respond shortly.',
-        nodePath: '/templates/email',
-        tags: ['template', 'email'],
-      },
-      {
-        id: 'doc-002',
-        title: 'DevOps Team Members',
-        content: 'On-call schedule and team roster.',
-        nodePath: '/team/devops',
-        tags: ['team', 'devops'],
-      },
-      {
-        id: 'doc-003',
-        title: 'Follow-up Email Template',
-        content: 'Please reply to this follow-up email.',
-        nodePath: '/templates/email',
-        tags: ['template', 'email'],
-      },
-    ])
-  )
+function createService(generateId?: () => string): KbService {
+  const repository = new InMemoryKbRepository([
+    {
+      id: 'doc-001',
+      title: 'Customer Response Template',
+      content: 'Thank you for reaching out. We will respond shortly.',
+      nodePath: '/templates/email',
+      tags: ['template', 'email'],
+    },
+    {
+      id: 'doc-002',
+      title: 'DevOps Team Members',
+      content: 'On-call schedule and team roster.',
+      nodePath: '/team/devops',
+      tags: ['team', 'devops'],
+    },
+    {
+      id: 'doc-003',
+      title: 'Follow-up Email Template',
+      content: 'Please reply to this follow-up email.',
+      nodePath: '/templates/email',
+      tags: ['template', 'email'],
+    },
+  ])
+
+  return generateId === undefined
+    ? new KbService(repository)
+    : new KbService(repository, generateId)
 }
 
 test('KbService.search: finds by title/content and respects topK', () => {
@@ -106,21 +108,22 @@ test('KbService.add: creates document and normalizes string tags', () => {
   assert.deepEqual(retrieved.tags, ['sms', 'otp'])
 })
 
-test('KbService.add: rejects duplicated id', () => {
-  const service = createService()
+test('KbService.add: regenerates id when generated id already exists', () => {
+  let calls = 0
+  const service = createService(() => {
+    calls += 1
+    return calls === 1 ? 'doc-001' : 'doc-999'
+  })
 
-  assert.throws(
-    () =>
-      service.add({
-        id: 'doc-001',
-        title: 'Duplicate',
-        content: 'Body',
-        nodePath: '/templates/sms',
-      }),
-    (error: unknown) =>
-      error instanceof ValidationError &&
-      /document id already exists/i.test(error.message)
-  )
+  const created = service.add({
+    title: 'SMS Template',
+    content: 'Body',
+    nodePath: '/templates/sms',
+  })
+
+  assert.equal(created.id, 'doc-999')
+  assert.equal(calls, 2)
+  assert.equal(service.retrieve({ docId: 'doc-001' }).title, 'Customer Response Template')
 })
 
 test('KbService.add: rejects invalid tags type', () => {

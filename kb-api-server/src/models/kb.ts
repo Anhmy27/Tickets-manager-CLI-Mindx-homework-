@@ -21,7 +21,6 @@ export interface KbRetrieveRequest {
 }
 
 export interface KbAddRequest {
-  id?: string
   title: string
   content: string
   nodePath: string
