@@ -4,7 +4,7 @@ Mục tiêu file này: liệt kê test cho `kb-api-server` (provider HTTP thật
 
 Hiện tại đang ở bước **TDD Green**:
 
-- `npm test` = **41 pass / 0 fail**
+- `npm test` = **53 pass / 0 fail**
 - Chia rõ 2 lớp: unit + integration
 
 ## Tổng số test
@@ -14,9 +14,10 @@ Hiện tại đang ở bước **TDD Green**:
 | Unit — KbService | `tests/unit/kb-service.test.ts` | 9 |
 | Unit — routeKbRequest | `tests/unit/kb-routes.test.ts` | 4 |
 | Unit — readPort | `tests/unit/env.test.ts` | 3 |
-| Unit — FileSystemKbRepository | `tests/unit/file-system-kb-repository.test.ts` | 3 |
+| Unit — FileSystemKbRepository | `tests/unit/file-system-kb-repository.test.ts` | 10 |
+| Unit — InMemoryKbRepository | `tests/unit/in-memory-kb-repository.test.ts` | 5 |
 | Integration — HTTP API contract | `tests/integration/server.test.ts` | 22 |
-| **Tổng** |  | **41** |
+| **Tổng** |  | **53** |
 
 ## Cách chạy
 
@@ -111,22 +112,57 @@ File: `tests/unit/env.test.ts`
 
 ---
 
-## 4) Unit — FileSystemKbRepository (3 tests)
+## 4) Unit — FileSystemKbRepository (10 tests)
 
 File: `tests/unit/file-system-kb-repository.test.ts`
 
 1. `initializes index and markdown files from seed`
    - Mong đợi: tạo `index.json` và các file markdown theo `nodePath/id`
 
-2. `create persists across repository re-instantiation`
+2. `listAll: hydrates content from markdown files`
+   - Mong đợi: doc trả về có `content` đọc từ file `.md`, không chỉ metadata index
+
+3. `findById: returns full document when id exists`
+   - Đầu vào: `doc-001`
+   - Mong đợi: trả đủ title, content, tags từ disk
+
+4. `findById: returns undefined when id is missing`
+   - Đầu vào: id không tồn tại
+   - Mong đợi: `undefined`
+
+5. `hasById: reflects whether document exists`
+   - Mong đợi: `true` với id có, `false` với id không có
+
+6. `listAll: includes documents added via create`
+   - Mong đợi: sau `create`, `listAll` có cả seed lẫn doc mới
+
+7. `create: writes markdown content to expected path`
+   - Mong đợi: file `{nodePath}/{id}.md` chứa đúng content
+
+8. `create persists across repository re-instantiation`
    - Mong đợi: tạo doc mới, khởi tạo lại repository vẫn `findById` được
 
-3. `stores metadata in index.json`
+9. `stores metadata in index.json`
    - Mong đợi: metadata của doc mới được ghi vào `index.json`
+
+10. `skips re-seeding when index.json already exists`
+    - Mong đợi: lần khởi tạo thứ hai không ghi đè dữ liệu đã có trên disk
 
 ---
 
-## 5) Integration — HTTP API contract (22 tests)
+## 5) Unit — InMemoryKbRepository (5 tests)
+
+File: `tests/unit/in-memory-kb-repository.test.ts`
+
+1. `listAll: returns seeded documents`
+2. `findById: returns document when id exists`
+3. `findById: returns undefined when id is missing`
+4. `hasById: reflects whether document exists`
+5. `create: persists document for listAll and findById`
+
+---
+
+## 6) Integration — HTTP API contract (22 tests)
 
 ### Happy path (1 test)
 
