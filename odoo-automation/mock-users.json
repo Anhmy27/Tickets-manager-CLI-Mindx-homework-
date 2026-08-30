@@ -1,0 +1,20 @@
+[
+  {
+    "email": "tran.thi.b@mindx.edu.vn",
+    "displayName": "Tran Thi B",
+    "hrStatus": "active",
+    "lmsStatus": "deactivated"
+  },
+  {
+    "email": "pham.van.c@mindx.edu.vn",
+    "displayName": "Pham Van C",
+    "hrStatus": "active",
+    "lmsStatus": "active"
+  },
+  {
+    "email": "cu.nhan.vien@mindx.edu.vn",
+    "displayName": "Cu Nhan Vien",
+    "hrStatus": "terminated",
+    "lmsStatus": "deactivated"
+  }
+]

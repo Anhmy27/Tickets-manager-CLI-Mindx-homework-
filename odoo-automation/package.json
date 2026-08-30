@@ -1,0 +1,22 @@
+{
+  "name": "odoo-automation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Odoo login issue automation for Week 5",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "tsx src/run.ts",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
+    "test:unit": "node --import tsx --test tests/unit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}

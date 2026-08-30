@@ -1,0 +1,13 @@
+{
+  "requiredStageId": 1,
+  "resolvedStageId": 4,
+  "titleKeywords": ["dang nhap", "đăng nhập", "login", "khong dang nhap duoc"],
+  "descriptionKeywords": [
+    "invalid username or password",
+    "deactivate",
+    "khong vao duoc lms",
+    "khong dang nhap duoc",
+    "quen mat khau",
+    "forgot password"
+  ]
+}
