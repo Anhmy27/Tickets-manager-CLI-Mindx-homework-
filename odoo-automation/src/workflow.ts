@@ -4,7 +4,7 @@ import type { AutomationRuleSet, OdooTicket, WorkflowDeps, WorkflowResult } from
 function buildInternalNote(ticket: OdooTicket, reason: string): string {
   return [
     '[Bot] Odoo automation decision',
-    `- Ticket: #${ticket.id} - ${ticket.name}`,
+    `- Ticket: #${ticket.ticketRef} - ${ticket.name}`,
     `- Email: ${ticket.emailFrom}`,
     `- Decision: ${reason}`,
   ].join('\n')
@@ -12,15 +12,20 @@ function buildInternalNote(ticket: OdooTicket, reason: string): string {
 
 function buildResolvedEmail(ticket: OdooTicket): { subject: string; body: string } {
   return {
-    subject: `RE: ${ticket.name} - Da xu ly - Ticket #${ticket.id}`,
+    subject: `RE: ${ticket.name} - Đã xử lý - Ticket #${ticket.ticketRef}`,
     body: [
-      `Chao ban,`,
+      `Chào ${ticket.customerName},`,
       '',
-      'Cam on ban da lien he. Team da tiep nhan ticket va vua kich hoat lai tai khoan LMS cua ban.',
-      'Ban vui long thu dang nhap lai va phan hoi neu van gap loi.',
+      'Cảm ơn bạn đã liên hệ team hỗ trợ.',
       '',
-      'Tran trong,',
+      'Team đã kiểm tra và xác nhận tài khoản LMS của bạn bị hệ thống tự động chuyển sang trạng thái tạm khóa (deactivate) do một thời gian không có hoạt động đăng nhập.',
+      'Team đã kích hoạt lại tài khoản giúp bạn rồi ạ.',
+      '',
+      'Bạn vui lòng thử đăng nhập lại. Nếu vẫn chưa vào được, bạn chỉ cần phản hồi lại email này, team sẽ hỗ trợ tiếp ngay ạ.',
+      '',
+      'Trân trọng,',
       'MindX Support Team',
+      `Ticket #${ticket.ticketRef}`,
     ].join('\n'),
   }
 }

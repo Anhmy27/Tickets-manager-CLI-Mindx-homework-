@@ -20,6 +20,7 @@ interface OdooAuthConfig {
 
 interface OdooTicketRecord {
   id: number
+  ticket_ref?: string
   name?: string
   description?: string
   partner_email?: string
@@ -43,7 +44,16 @@ export class OdooJsonRpcClient implements OdooClient {
       'search_read',
       [[['stage_id', '=', stageId]]],
       {
-        fields: ['id', 'name', 'description', 'partner_email', 'partner_name', 'stage_id', 'tag_ids'],
+        fields: [
+          'id',
+          'ticket_ref',
+          'name',
+          'description',
+          'partner_email',
+          'partner_name',
+          'stage_id',
+          'tag_ids',
+        ],
         order: 'id asc',
         limit,
       }
@@ -56,6 +66,8 @@ export class OdooJsonRpcClient implements OdooClient {
 
     return records.map((record) => ({
       id: record.id,
+      ticketRef: record.ticket_ref ?? String(record.id).padStart(5, '0'),
+      customerName: record.partner_name?.trim() || 'bạn',
       name: record.name ?? '(no title)',
       description: stripHtml(record.description ?? ''),
       emailFrom: extractEmail(record.partner_email ?? record.description ?? ''),
@@ -67,7 +79,8 @@ export class OdooJsonRpcClient implements OdooClient {
 
   async postInternalNote(ticketId: number, body: string): Promise<void> {
     await this.executeKw('helpdesk.ticket', 'message_post', [[ticketId]], {
-      body: toHtml(body),
+      body: toMessageHtml(body),
+      body_is_html: true,
       message_type: 'comment',
       subtype_xmlid: 'mail.mt_note',
     })
@@ -76,7 +89,8 @@ export class OdooJsonRpcClient implements OdooClient {
   async postCustomerReply(ticketId: number, subject: string, body: string): Promise<void> {
     await this.executeKw('helpdesk.ticket', 'message_post', [[ticketId]], {
       subject,
-      body: toHtml(body),
+      body: toMessageHtml(body),
+      body_is_html: true,
       message_type: 'comment',
       subtype_xmlid: 'mail.mt_comment',
     })
@@ -175,14 +189,25 @@ function stripHtml(raw: string): string {
   return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-function toHtml(text: string): string {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .join('<br/>')
-}
-
 function extractEmail(value: string): string {
   const match = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
   return match?.[0] ?? value.trim()
+}
+
+function toMessageHtml(text: string): string {
+  return text
+    .split(/\r?\n\r?\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\r?\n/g, '<br/>')}</p>`)
+    .join('')
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }

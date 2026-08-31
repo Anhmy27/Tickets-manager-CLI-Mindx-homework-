@@ -13,6 +13,8 @@ const defaultRules: AutomationRuleSet = {
 
 const baseTicket: OdooTicket = {
   id: 14,
+  ticketRef: '00014',
+  customerName: 'Trần Thị B',
   name: 'Không đăng nhập được LMS - Giáo viên Trần Thị B',
   description:
     'Em không đăng nhập được LMS từ sáng nay, báo lỗi "Invalid username or password".',

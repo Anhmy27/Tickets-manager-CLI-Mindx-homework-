@@ -5,6 +5,8 @@ export type Decision = 'AUTO_RESOLVE' | 'NEED_REVIEW' | 'ESCALATE_HR' | 'SKIP'
 
 export interface OdooTicket {
   id: number
+  ticketRef: string
+  customerName: string
   name: string
   description: string
   emailFrom: string

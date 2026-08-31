@@ -20,6 +20,8 @@ const rules: AutomationRuleSet = {
 
 const ticket: OdooTicket = {
   id: 14,
+  ticketRef: '00014',
+  customerName: 'Trần Thị B',
   name: 'Không đăng nhập được LMS - Giáo viên Trần Thị B',
   description:
     'Em không đăng nhập được LMS từ sáng nay, báo lỗi "Invalid username or password".',
@@ -71,6 +73,8 @@ test('processTicket: auto resolves deactivated account when HR is active', async
   assert.equal(result.needsHumanAck, false)
   assert.equal(deps.events.some((item) => item.startsWith('reactivate:')), true)
   assert.equal(deps.events.some((item) => item.startsWith('note:')), true)
+  assert.equal(deps.events.some((item) => item.includes('#00014')), true)
+  assert.equal(deps.events.some((item) => item.includes('Chào Trần Thị B,')), true)
   assert.equal(deps.events.some((item) => item.startsWith('mail:')), true)
   assert.equal(deps.events.some((item) => item.startsWith('move:')), true)
 })

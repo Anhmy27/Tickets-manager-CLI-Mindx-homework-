@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     const marker = markerFor(result.decision)
     const humanNextStep = result.needsHumanAck ? ' | NEEDS_AGENT_ACK' : ''
     console.log(
-      `${marker} #${ticket.id} ${ticket.emailFrom} -> ${result.decision}${humanNextStep} | ${result.reason}`
+      `${marker} #${ticket.ticketRef} ${ticket.emailFrom} -> ${result.decision}${humanNextStep} | ${result.reason}`
     )
   }
 
