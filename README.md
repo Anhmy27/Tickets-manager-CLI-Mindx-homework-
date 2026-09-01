@@ -2,23 +2,19 @@
 
 Repository này chứa bài làm MindX Engineer Onboarding:
 
-- **Tuần 2:** Ticket Manager CLI
-- **Tuần 3:** Knowledge Base integration (mock client + HTTP client + KB API server)
-- **Tuần 5:** Odoo Helpdesk automation cho login issue (Operating Engineer mindset)
-
 README root này chỉ để định hướng nhanh. Chi tiết chạy/cài đặt nằm trong README của từng package.
 
 ## Cấu trúc hiện tại
 
-| Folder | Vai trò |
-|---|---|
-| [`docs/plans/`](./docs/plans/) | Kế hoạch và mục tiêu theo tuần |
-| [`ticket-manager-cli/`](./ticket-manager-cli/) | Ứng dụng CLI chính (ticket + KB commands) |
-| [`kb-api-client/`](./kb-api-client/) | HTTP client package để gọi KB API |
-| [`kb-api-server/`](./kb-api-server/) | KB API server chạy độc lập cho HTTP mode end-to-end |
-| [`odoo-automation/`](./odoo-automation/) | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
-| [`research-week-1/`](./research-week-1/) | Research Week 1 (TDD + Hexagonal) |
-| [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Ghi chú, transcript và artifact quá trình làm bài |
+| Folder                                                                 | Vai trò                                                     |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`docs/plans/`](./docs/plans/)                                         | Kế hoạch và mục tiêu theo tuần                              |
+| [`ticket-manager-cli/`](./ticket-manager-cli/)                         | Ứng dụng CLI chính (ticket + KB commands)                   |
+| [`kb-api-client/`](./kb-api-client/)                                   | HTTP client package để gọi KB API                           |
+| [`kb-api-server/`](./kb-api-server/)                                   | KB API server chạy độc lập cho HTTP mode end-to-end         |
+| [`odoo-automation/`](./odoo-automation/)                               | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
+| [`research-week-1/`](./research-week-1/)                               | Research Week 1 (TDD + Hexagonal)                           |
+| [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Ghi chú, transcript và artifact quá trình làm bài           |
 
 ## Nên đọc theo thứ tự
 
@@ -87,8 +83,12 @@ cd odoo-automation
 npm install
 copy .env.example .env
 npm test
-npm run start
+npm start
+npm run dev
 ```
+
+- `npm start`: quét một lần các ticket ở stage intake.
+- `npm run dev`: chạy webhook server (`POST /webhook`) để nhận ticket real-time từ Odoo/ngrok.
 
 ### Biến môi trường chính
 
