@@ -23,6 +23,7 @@ export interface TicketAnalysis {
 export interface AutomationRuleSet {
   requiredStageId: number
   resolvedStageId: number
+  tagKeywords: string[]
   titleKeywords: string[]
   descriptionKeywords: string[]
 }
@@ -37,6 +38,7 @@ export interface LmsClient {
 }
 
 export interface OdooClient {
+  hasAutomationNote(ticketId: number): Promise<boolean>
   postInternalNote(ticketId: number, body: string): Promise<void>
   postCustomerReply(ticketId: number, subject: string, body: string): Promise<void>
   moveToStage(ticketId: number, stageId: number): Promise<void>

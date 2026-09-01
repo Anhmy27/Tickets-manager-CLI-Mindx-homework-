@@ -1,14 +1,6 @@
 import { analyzeTicket } from './analyze-ticket.js'
-import type { AutomationRuleSet, OdooTicket, WorkflowDeps, WorkflowResult } from './types.js'
-
-function buildInternalNote(ticket: OdooTicket, reason: string): string {
-  return [
-    '[Bot] Odoo automation decision',
-    `- Ticket: #${ticket.ticketRef} - ${ticket.name}`,
-    `- Email: ${ticket.emailFrom}`,
-    `- Decision: ${reason}`,
-  ].join('\n')
-}
+import { buildBotInternalNote } from './bot-note.js'
+import type { AutomationRuleSet, OdooClient, OdooTicket, WorkflowDeps, WorkflowResult } from './types.js'
 
 function buildResolvedEmail(ticket: OdooTicket): { subject: string; body: string } {
   return {
@@ -47,14 +39,14 @@ export async function processTicket(
 
   if (hrStatus === 'terminated') {
     const reason = 'ESCALATE_HR: employee terminated'
-    await deps.odooClient.postInternalNote(ticket.id, buildInternalNote(ticket, reason))
-    return { decision: 'ESCALATE_HR', reason, needsHumanAck: true }
+    const finalReason = await postBotNoteOnce(ticket, reason, deps.odooClient)
+    return { decision: 'ESCALATE_HR', reason: finalReason, needsHumanAck: true }
   }
 
   if (lmsStatus === 'deactivated' && hrStatus === 'active') {
     const reason = 'AUTO_RESOLVE: deactivated + HR active'
     await deps.lmsClient.reactivateAccountByEmail(ticket.emailFrom)
-    await deps.odooClient.postInternalNote(ticket.id, buildInternalNote(ticket, reason))
+    await deps.odooClient.postInternalNote(ticket.id, buildBotInternalNote(ticket, reason))
     const email = buildResolvedEmail(ticket)
     await deps.odooClient.postCustomerReply(ticket.id, email.subject, email.body)
     await deps.odooClient.moveToStage(ticket.id, rules.resolvedStageId)
@@ -62,6 +54,19 @@ export async function processTicket(
   }
 
   const reason = `NEED_REVIEW: LMS=${lmsStatus}, HR=${hrStatus}`
-  await deps.odooClient.postInternalNote(ticket.id, buildInternalNote(ticket, reason))
-  return { decision: 'NEED_REVIEW', reason, needsHumanAck: true }
+  const finalReason = await postBotNoteOnce(ticket, reason, deps.odooClient)
+  return { decision: 'NEED_REVIEW', reason: finalReason, needsHumanAck: true }
+}
+
+async function postBotNoteOnce(
+  ticket: OdooTicket,
+  reason: string,
+  odooClient: OdooClient
+): Promise<string> {
+  if (await odooClient.hasAutomationNote(ticket.id)) {
+    return `${reason} | already noted`
+  }
+
+  await odooClient.postInternalNote(ticket.id, buildBotInternalNote(ticket, reason))
+  return reason
 }

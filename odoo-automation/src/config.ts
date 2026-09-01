@@ -32,6 +32,9 @@ export function loadConfig(): AppConfig {
   if (!Number.isInteger(rules.resolvedStageId) || rules.resolvedStageId <= 0) {
     throw new Error('ticket-rules.json: resolvedStageId must be a positive integer')
   }
+  if (!Array.isArray(rules.tagKeywords) || rules.tagKeywords.length === 0) {
+    throw new Error('ticket-rules.json: tagKeywords must be a non-empty string array')
+  }
 
   return {
     odooUrl,

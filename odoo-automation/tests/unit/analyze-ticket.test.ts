@@ -6,6 +6,7 @@ import type { AutomationRuleSet, OdooTicket } from '../../src/types.js'
 
 const defaultRules: AutomationRuleSet = {
   requiredStageId: 1,
+  tagKeywords: ['login'],
   titleKeywords: ['đăng nhập', 'login'],
   descriptionKeywords: ['invalid username or password', 'deactivate'],
   resolvedStageId: 4,
@@ -50,7 +51,7 @@ test('analyzeTicket: skips ticket when login signals are missing', () => {
   )
 
   assert.equal(analysis.kind, 'skip')
-  assert.equal(analysis.reason.includes('no login signals'), true)
+  assert.equal(analysis.reason.includes('missing login tag'), true)
 })
 
 test('analyzeTicket: skips content/file issue because no login intent', () => {
@@ -65,5 +66,20 @@ test('analyzeTicket: skips content/file issue because no login intent', () => {
   )
 
   assert.equal(analysis.kind, 'skip')
-  assert.equal(analysis.reason.includes('no login signals'), true)
+  assert.equal(analysis.reason.includes('missing login tag'), true)
+})
+
+test('analyzeTicket: skips even with login text when login tag is missing', () => {
+  const analysis = analyzeTicket(
+    {
+      ...baseTicket,
+      name: 'Không đăng nhập được LMS',
+      description: 'Lỗi invalid username or password',
+      tags: ['LMS', 'urgent'],
+    },
+    defaultRules
+  )
+
+  assert.equal(analysis.kind, 'skip')
+  assert.equal(analysis.reason.includes('missing login tag'), true)
 })

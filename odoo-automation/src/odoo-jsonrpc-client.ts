@@ -1,4 +1,5 @@
 import type { OdooClient, OdooTicket } from './types.js'
+import { BOT_AUTOMATION_NOTE_MARKER } from './bot-note.js'
 
 interface RpcEnvelope {
   jsonrpc: '2.0'
@@ -98,6 +99,23 @@ export class OdooJsonRpcClient implements OdooClient {
 
   async moveToStage(ticketId: number, stageId: number): Promise<void> {
     await this.executeKw('helpdesk.ticket', 'write', [[ticketId], { stage_id: stageId }])
+  }
+
+  async hasAutomationNote(ticketId: number): Promise<boolean> {
+    const rows = await this.executeKw<Array<{ id: number }>>(
+      'mail.message',
+      'search_read',
+      [
+        [
+          ['model', '=', 'helpdesk.ticket'],
+          ['res_id', '=', ticketId],
+          ['body', 'ilike', BOT_AUTOMATION_NOTE_MARKER],
+        ],
+      ],
+      { fields: ['id'], limit: 1 }
+    )
+
+    return rows.length > 0
   }
 
   private async readTagNames(tagIds: number[]): Promise<Map<number, string>> {

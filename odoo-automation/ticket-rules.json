@@ -1,6 +1,7 @@
 {
   "requiredStageId": 1,
-  "resolvedStageId": 4,
+  "resolvedStageId": 2,
+  "tagKeywords": ["login", "đăng nhập"],
   "titleKeywords": ["dang nhap", "đăng nhập", "login", "khong dang nhap duoc"],
   "descriptionKeywords": [
     "invalid username or password",

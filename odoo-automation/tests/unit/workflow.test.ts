@@ -13,6 +13,7 @@ import type {
 
 const rules: AutomationRuleSet = {
   requiredStageId: 1,
+  tagKeywords: ['login'],
   titleKeywords: ['đăng nhập', 'login'],
   descriptionKeywords: ['invalid username or password', 'deactivate'],
   resolvedStageId: 4,
@@ -50,6 +51,9 @@ function createDeps(directory: TicketDirectoryEntry) {
   }
 
   const odooClient: OdooClient = {
+    async hasAutomationNote() {
+      return false
+    },
     async postInternalNote(ticketId, body) {
       events.push(`note:${ticketId}:${body}`)
     },
@@ -120,4 +124,26 @@ test('processTicket: skips non-login ticket without side effects', async () => {
   assert.equal(result.decision, 'SKIP')
   assert.equal(result.needsHumanAck, false)
   assert.deepEqual(deps.events, [])
+})
+
+test('processTicket: does not duplicate NEED_REVIEW note when bot note already exists', async () => {
+  const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'active', lmsStatus: 'active' })
+  deps.odooClient.hasAutomationNote = async () => true
+
+  const result = await processTicket(ticket, rules, deps)
+
+  assert.equal(result.decision, 'NEED_REVIEW')
+  assert.equal(result.reason.includes('already noted'), true)
+  assert.equal(deps.events.some((item) => item.startsWith('note:')), false)
+})
+
+test('processTicket: does not duplicate ESCALATE_HR note when bot note already exists', async () => {
+  const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'terminated', lmsStatus: 'deactivated' })
+  deps.odooClient.hasAutomationNote = async () => true
+
+  const result = await processTicket(ticket, rules, deps)
+
+  assert.equal(result.decision, 'ESCALATE_HR')
+  assert.equal(result.reason.includes('already noted'), true)
+  assert.equal(deps.events.some((item) => item.startsWith('note:')), false)
 })
