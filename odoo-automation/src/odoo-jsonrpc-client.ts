@@ -30,6 +30,8 @@ interface OdooTicketRecord {
   tag_ids?: number[]
 }
 
+const HELP_DESK_FIELDS = ['id', 'ticket_ref', 'name', 'description', 'partner_email', 'partner_name', 'stage_id', 'tag_ids']
+
 export class OdooJsonRpcClient implements OdooClient {
   private uid: number | null = null
   private requestId = 1
@@ -45,21 +47,27 @@ export class OdooJsonRpcClient implements OdooClient {
       'search_read',
       [[['stage_id', '=', stageId]]],
       {
-        fields: [
-          'id',
-          'ticket_ref',
-          'name',
-          'description',
-          'partner_email',
-          'partner_name',
-          'stage_id',
-          'tag_ids',
-        ],
+        fields: HELP_DESK_FIELDS,
         order: 'id asc',
         limit,
       }
     )
 
+    return this.mapTicketRecords(records, stageId)
+  }
+
+  async fetchTicketById(ticketId: number): Promise<OdooTicket | null> {
+    const records = await this.executeKw<OdooTicketRecord[]>(
+      'helpdesk.ticket',
+      'search_read',
+      [[['id', '=', ticketId]]],
+      { fields: HELP_DESK_FIELDS, limit: 1 }
+    )
+    const mapped = await this.mapTicketRecords(records)
+    return mapped[0] ?? null
+  }
+
+  private async mapTicketRecords(records: OdooTicketRecord[], fallbackStageId = 0): Promise<OdooTicket[]> {
     const tagIds = Array.from(
       new Set(records.flatMap((record) => record.tag_ids ?? []).filter((value) => Number.isInteger(value)))
     ) as number[]
@@ -72,8 +80,8 @@ export class OdooJsonRpcClient implements OdooClient {
       name: record.name ?? '(no title)',
       description: stripHtml(record.description ?? ''),
       emailFrom: extractEmail(record.partner_email ?? record.description ?? ''),
-      stageId: record.stage_id?.[0] ?? stageId,
-      stageName: record.stage_id?.[1] ?? `stage:${stageId}`,
+      stageId: record.stage_id?.[0] ?? fallbackStageId,
+      stageName: record.stage_id?.[1] ?? `stage:${fallbackStageId}`,
       tags: (record.tag_ids ?? []).map((id) => tagMap.get(id) ?? `tag:${id}`),
     }))
   }

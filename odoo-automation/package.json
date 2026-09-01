@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "start": "tsx src/run.ts",
+    "dev": "tsx src/webhook-server.ts",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:unit": "node --import tsx --test tests/unit",
     "typecheck": "tsc --project tsconfig.json --noEmit"
@@ -15,8 +16,12 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }

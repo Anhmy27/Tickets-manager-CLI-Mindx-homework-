@@ -16,5 +16,11 @@
     "displayName": "Cu Nhan Vien",
     "hrStatus": "terminated",
     "lmsStatus": "deactivated"
+  },
+  {
+    "email": "nguyen.thi.d@mindx.edu.vn",
+    "displayName": "Nguyen Thi D",
+    "hrStatus": "active",
+    "lmsStatus": "deactivated"
   }
 ]

@@ -147,3 +147,27 @@ test('processTicket: does not duplicate ESCALATE_HR note when bot note already e
   assert.equal(result.reason.includes('already noted'), true)
   assert.equal(deps.events.some((item) => item.startsWith('note:')), false)
 })
+
+test('processTicket: marks review when HR status is unknown', async () => {
+  const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'unknown', lmsStatus: 'deactivated' })
+
+  const result = await processTicket(ticket, rules, deps)
+
+  assert.equal(result.decision, 'NEED_REVIEW')
+  assert.equal(result.needsHumanAck, true)
+  assert.equal(result.reason.includes('HR=unknown'), true)
+  assert.equal(deps.events.some((item) => item.startsWith('reactivate:')), false)
+  assert.equal(deps.events.some((item) => item.startsWith('move:')), false)
+})
+
+test('processTicket: marks review when LMS status is unknown', async () => {
+  const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'active', lmsStatus: 'unknown' })
+
+  const result = await processTicket(ticket, rules, deps)
+
+  assert.equal(result.decision, 'NEED_REVIEW')
+  assert.equal(result.needsHumanAck, true)
+  assert.equal(result.reason.includes('LMS=unknown'), true)
+  assert.equal(deps.events.some((item) => item.startsWith('reactivate:')), false)
+  assert.equal(deps.events.some((item) => item.startsWith('mail:')), false)
+})
