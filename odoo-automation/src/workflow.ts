@@ -46,10 +46,10 @@ export async function processTicket(
   if (lmsStatus === 'deactivated' && hrStatus === 'active') {
     const reason = 'AUTO_RESOLVE: deactivated + HR active'
     await deps.lmsClient.reactivateAccountByEmail(ticket.emailFrom)
+    await deps.odooClient.moveToStage(ticket.id, rules.resolvedStageId)
     await deps.odooClient.postInternalNote(ticket.id, buildBotInternalNote(ticket, reason))
     const email = buildResolvedEmail(ticket)
     await deps.odooClient.postCustomerReply(ticket.id, email.subject, email.body)
-    await deps.odooClient.moveToStage(ticket.id, rules.resolvedStageId)
     return { decision: 'AUTO_RESOLVE', reason, needsHumanAck: false }
   }
 

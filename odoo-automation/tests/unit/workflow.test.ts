@@ -81,6 +81,15 @@ test('processTicket: auto resolves deactivated account when HR is active', async
   assert.equal(deps.events.some((item) => item.includes('Chào Trần Thị B,')), true)
   assert.equal(deps.events.some((item) => item.startsWith('mail:')), true)
   assert.equal(deps.events.some((item) => item.startsWith('move:')), true)
+
+  const moveIndex = deps.events.findIndex((item) => item.startsWith('move:'))
+  const noteIndex = deps.events.findIndex((item) => item.startsWith('note:'))
+  const mailIndex = deps.events.findIndex((item) => item.startsWith('mail:'))
+  assert.equal(moveIndex >= 0, true)
+  assert.equal(noteIndex >= 0, true)
+  assert.equal(mailIndex >= 0, true)
+  assert.equal(moveIndex < noteIndex, true)
+  assert.equal(noteIndex < mailIndex, true)
 })
 
 test('processTicket: escalates when HR status is terminated', async () => {

@@ -33,6 +33,11 @@ export function extractTicketId(payload: unknown): number | null {
   }
 
   if (payload && typeof payload === 'object') {
+    const envelopeId = toPositiveInt((payload as { _id?: unknown })._id)
+    if (envelopeId !== null) {
+      return envelopeId
+    }
+
     const nested = idFromRecordLike((payload as { data?: unknown }).data)
     if (nested !== null) {
       return nested

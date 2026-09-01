@@ -15,6 +15,17 @@ test('extractTicketId: reads nested payload.data.id', () => {
   assert.equal(extractTicketId({ data: { id: '18' } }), 18)
 })
 
+test('extractTicketId: reads Odoo Studio webhook envelope _id', () => {
+  assert.equal(
+    extractTicketId({
+      _action: 'Gửi thông báo webhook',
+      _id: 21,
+      _model: 'helpdesk.ticket',
+    }),
+    21
+  )
+})
+
 test('extractTicketId: returns null for invalid payload', () => {
   assert.equal(extractTicketId({ foo: 'bar' }), null)
   assert.equal(extractTicketId(null), null)
