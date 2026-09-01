@@ -21,13 +21,13 @@ interface OdooAuthConfig {
 
 interface OdooTicketRecord {
   id: number
-  ticket_ref?: string
-  name?: string
-  description?: string
-  partner_email?: string
-  partner_name?: string
-  stage_id?: [number, string]
-  tag_ids?: number[]
+  ticket_ref?: unknown
+  name?: unknown
+  description?: unknown
+  partner_email?: unknown
+  partner_name?: unknown
+  stage_id?: unknown
+  tag_ids?: unknown
 }
 
 const HELP_DESK_FIELDS = ['id', 'ticket_ref', 'name', 'description', 'partner_email', 'partner_name', 'stage_id', 'tag_ids']
@@ -69,21 +69,32 @@ export class OdooJsonRpcClient implements OdooClient {
 
   private async mapTicketRecords(records: OdooTicketRecord[], fallbackStageId = 0): Promise<OdooTicket[]> {
     const tagIds = Array.from(
-      new Set(records.flatMap((record) => record.tag_ids ?? []).filter((value) => Number.isInteger(value)))
+      new Set(records.flatMap((record) => normalizeTagIds(record.tag_ids)).filter((value) => Number.isInteger(value)))
     ) as number[]
     const tagMap = await this.readTagNames(tagIds)
 
-    return records.map((record) => ({
-      id: record.id,
-      ticketRef: record.ticket_ref ?? String(record.id).padStart(5, '0'),
-      customerName: record.partner_name?.trim() || 'bạn',
-      name: record.name ?? '(no title)',
-      description: stripHtml(record.description ?? ''),
-      emailFrom: extractEmail(record.partner_email ?? record.description ?? ''),
-      stageId: record.stage_id?.[0] ?? fallbackStageId,
-      stageName: record.stage_id?.[1] ?? `stage:${fallbackStageId}`,
-      tags: (record.tag_ids ?? []).map((id) => tagMap.get(id) ?? `tag:${id}`),
-    }))
+    return records.map((record) => {
+      const ticketRef = toNonEmptyText(record.ticket_ref) ?? String(record.id).padStart(5, '0')
+      const customerName = toNonEmptyText(record.partner_name) ?? 'bạn'
+      const title = toNonEmptyText(record.name) ?? '(no title)'
+      const rawDescription = toText(record.description) ?? ''
+      const description = stripHtml(rawDescription)
+      const emailFrom = extractEmail(toText(record.partner_email) ?? rawDescription)
+      const [stageId, stageName] = extractStage(record.stage_id, fallbackStageId)
+      const tags = normalizeTagIds(record.tag_ids).map((id) => tagMap.get(id) ?? `tag:${id}`)
+
+      return {
+        id: record.id,
+        ticketRef,
+        customerName,
+        name: title,
+        description,
+        emailFrom,
+        stageId,
+        stageName,
+        tags,
+      }
+    })
   }
 
   async postInternalNote(ticketId: number, body: string): Promise<void> {
@@ -215,9 +226,45 @@ function stripHtml(raw: string): string {
   return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-function extractEmail(value: string): string {
-  const match = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
-  return match?.[0] ?? value.trim()
+function toText(value: unknown): string | null {
+  return typeof value === 'string' ? value : null
+}
+
+function toNonEmptyText(value: unknown): string | null {
+  const text = toText(value)?.trim() ?? ''
+  return text.length > 0 ? text : null
+}
+
+function normalizeTagIds(value: unknown): number[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.filter((item): item is number => Number.isInteger(item))
+}
+
+function extractStage(value: unknown, fallbackStageId: number): [number, string] {
+  if (!Array.isArray(value) || value.length < 2) {
+    return [fallbackStageId, `stage:${fallbackStageId}`]
+  }
+
+  const stageId = value[0]
+  const stageName = value[1]
+  if (typeof stageId === 'number' && Number.isInteger(stageId) && stageId > 0 && typeof stageName === 'string') {
+    return [stageId, stageName]
+  }
+
+  return [fallbackStageId, `stage:${fallbackStageId}`]
+}
+
+function extractEmail(value: unknown): string {
+  const text = toText(value)?.trim() ?? ''
+  if (!text) {
+    return ''
+  }
+
+  const match = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
+  return match?.[0] ?? ''
 }
 
 function toMessageHtml(text: string): string {

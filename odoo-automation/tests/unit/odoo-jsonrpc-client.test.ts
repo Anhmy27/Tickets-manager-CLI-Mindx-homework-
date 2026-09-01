@@ -149,6 +149,40 @@ test('fetchTicketById: returns mapped ticket when record exists', async () => {
   )
 })
 
+test('fetchTicketById: tolerates falsey Odoo fields and leaves email empty', async () => {
+  await withMockFetch(
+    [
+      { json: { result: 7 } },
+      {
+        json: {
+          result: [
+            {
+              id: 22,
+              name: false,
+              description: false,
+              partner_email: false,
+              partner_name: false,
+              stage_id: false,
+              tag_ids: false,
+            },
+          ],
+        },
+      },
+    ],
+    async () => {
+      const client = makeClient()
+      const ticket = await client.fetchTicketById(22)
+      assert.equal(ticket?.id, 22)
+      assert.equal(ticket?.name, '(no title)')
+      assert.equal(ticket?.description, '')
+      assert.equal(ticket?.emailFrom, '')
+      assert.equal(ticket?.customerName, 'bạn')
+      assert.equal(ticket?.stageName, 'stage:0')
+      assert.deepEqual(ticket?.tags, [])
+    }
+  )
+})
+
 test('hasAutomationNote: returns true when at least one bot message exists', async () => {
   await withMockFetch(
     [{ json: { result: 7 } }, { json: { result: [{ id: 1 }] } }],

@@ -32,6 +32,10 @@ export async function processTicket(
     return { decision: 'SKIP', reason: analysis.reason, needsHumanAck: false }
   }
 
+  if (!hasValidEmail(ticket.emailFrom)) {
+    return { decision: 'SKIP', reason: 'skip: missing customer email', needsHumanAck: false }
+  }
+
   const [hrStatus, lmsStatus] = await Promise.all([
     deps.hrClient.getEmploymentStatusByEmail(ticket.emailFrom),
     deps.lmsClient.getAccountStatusByEmail(ticket.emailFrom),
@@ -69,4 +73,8 @@ async function postBotNoteOnce(
 
   await odooClient.postInternalNote(ticket.id, buildBotInternalNote(ticket, reason))
   return reason
+}
+
+function hasValidEmail(value: string): boolean {
+  return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(value)
 }

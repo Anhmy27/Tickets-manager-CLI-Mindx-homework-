@@ -135,6 +135,24 @@ test('processTicket: skips non-login ticket without side effects', async () => {
   assert.deepEqual(deps.events, [])
 })
 
+test('processTicket: skips login candidate when customer email is missing', async () => {
+  const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'active', lmsStatus: 'deactivated' })
+
+  const result = await processTicket(
+    {
+      ...ticket,
+      emailFrom: '',
+    },
+    rules,
+    deps
+  )
+
+  assert.equal(result.decision, 'SKIP')
+  assert.equal(result.reason, 'skip: missing customer email')
+  assert.equal(result.needsHumanAck, false)
+  assert.deepEqual(deps.events, [])
+})
+
 test('processTicket: does not duplicate NEED_REVIEW note when bot note already exists', async () => {
   const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'active', lmsStatus: 'active' })
   deps.odooClient.hasAutomationNote = async () => true
