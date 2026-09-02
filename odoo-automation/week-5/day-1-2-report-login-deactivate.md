@@ -26,17 +26,16 @@ Nếu xử lý thủ công từng ticket:
 Case login deactivate phù hợp tự động hóa vì:
 
 - Quy trình quyết định rõ ràng, ít mơ hồ.
-- Dữ liệu đầu vào có cấu trúc (tag, title/description, email, trạng thái HR/LMS).
+- Dữ liệu đầu vào có cấu trúc (tag, title/description, email, trạng thái HR/LMS); tag là tín hiệu mạnh, title/description là fallback khi CS quên tag.
 - Hành động đầu ra chuẩn hóa được (reactivate, note, reply, move stage).
 - Đây là hướng đúng với Operating Engineer: giảm thao tác lặp, tăng tốc xử lý trước khi chạm vào root-cause code của hệ thống gốc.
 
 ## 4) Logic quyết định đã chốt
 
-Workflow đang triển khai theo 4 quyết định:
+Workflow đang triển khai theo 3 quyết định:
 
 - `AUTO_RESOLVE`: login issue + `LMS=deactivated` + `HR=active`
-- `NEED_REVIEW`: login issue nhưng không đủ điều kiện auto
-- `ESCALATE_HR`: login issue + `HR=terminated`
+- `NEED_REVIEW`: login issue nhưng không đủ điều kiện auto, bao gồm user không active/không rõ trạng thái
 - `SKIP`: không đúng scope login hoặc thiếu điều kiện đầu vào
 
 Luồng `AUTO_RESOLVE` hiện tại:
@@ -49,9 +48,9 @@ Luồng `AUTO_RESOLVE` hiện tại:
 
 Để tránh xử lý sai hoặc crash:
 
-- Chỉ xử lý khi ticket match rule theo stage + tag + intent.
+- Chỉ xử lý khi ticket đúng stage và có ít nhất một tín hiệu login (tag, title hoặc description).
 - Hỗ trợ payload webhook thực tế từ Odoo Studio (bao gồm `_id`).
-- Idempotency cho note để không ghi trùng ở các nhánh cần review/escalate.
+- Idempotency cho note để không ghi trùng ở nhánh cần review.
 - Nếu thiếu email hợp lệ thì `SKIP` an toàn, không gọi side effects.
 - Parser dữ liệu Odoo đã harden cho `false/null/non-string`.
 
@@ -67,7 +66,7 @@ Luồng `AUTO_RESOLVE` hiện tại:
 Automation này giải quyết tầng vận hành, không thay thế hoàn toàn xử lý người:
 
 - Không sửa root cause của hệ thống LMS/Odoo.
-- Không tự xử lý các trường hợp ngoài rules (được chuyển `NEED_REVIEW`/`ESCALATE_HR`).
+- Không tự xử lý các trường hợp ngoài rules (được chuyển `NEED_REVIEW`).
 - Cần tiếp tục theo dõi metrics thực tế để tuning rule theo dữ liệu mới.
 
 ## 8) Kết luận

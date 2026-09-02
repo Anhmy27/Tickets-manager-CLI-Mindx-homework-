@@ -41,12 +41,6 @@ export async function processTicket(
     deps.lmsClient.getAccountStatusByEmail(ticket.emailFrom),
   ])
 
-  if (hrStatus === 'terminated') {
-    const reason = 'ESCALATE_HR: employee terminated'
-    const finalReason = await postBotNoteOnce(ticket, reason, deps.odooClient)
-    return { decision: 'ESCALATE_HR', reason: finalReason, needsHumanAck: true }
-  }
-
   if (lmsStatus === 'deactivated' && hrStatus === 'active') {
     const reason = 'AUTO_RESOLVE: deactivated + HR active'
     await deps.lmsClient.reactivateAccountByEmail(ticket.emailFrom)

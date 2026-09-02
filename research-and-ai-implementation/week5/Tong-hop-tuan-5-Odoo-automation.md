@@ -10,7 +10,7 @@ Tài liệu này tổng hợp lại những gì mình và AI đã làm từ lúc
   - Nhận ticket
   - Phân tích login intent
   - Check HR + LMS (mock)
-  - Quyết định xử lý (`AUTO_RESOLVE`, `NEED_REVIEW`, `ESCALATE_HR`, `SKIP`)
+  - Quyết định xử lý (`AUTO_RESOLVE`, `NEED_REVIEW`, `SKIP`)
 
 ## 2) Giai đoạn chuẩn bị
 
@@ -50,7 +50,7 @@ Tài liệu này tổng hợp lại những gì mình và AI đã làm từ lúc
 ### A. Core workflow và rules
 
 - Tách rõ phân tích (`analyze-ticket.ts`) và hành động (`workflow.ts`).
-- Gate theo login tag + title/description intent.
+- Nhận diện login candidate theo fallback: tag -> title -> description.
 - Đổi stage resolved sang `2` (in progress), không tự đóng ticket.
 
 ### B. Webhook server

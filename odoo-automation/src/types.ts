@@ -1,7 +1,7 @@
 export type HrStatus = 'active' | 'terminated' | 'unknown'
 export type LmsStatus = 'active' | 'deactivated' | 'unknown'
 
-export type Decision = 'AUTO_RESOLVE' | 'NEED_REVIEW' | 'ESCALATE_HR' | 'SKIP'
+export type Decision = 'AUTO_RESOLVE' | 'NEED_REVIEW' | 'SKIP'
 
 export interface OdooTicket {
   id: number

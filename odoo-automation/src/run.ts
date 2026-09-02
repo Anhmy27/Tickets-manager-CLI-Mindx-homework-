@@ -22,7 +22,6 @@ async function main(): Promise<void> {
   const counters: Record<Decision, number> = {
     AUTO_RESOLVE: 0,
     NEED_REVIEW: 0,
-    ESCALATE_HR: 0,
     SKIP: 0,
   }
 
@@ -41,7 +40,6 @@ async function main(): Promise<void> {
       'Done:',
       `AUTO_RESOLVE=${counters.AUTO_RESOLVE}`,
       `NEED_REVIEW=${counters.NEED_REVIEW}`,
-      `ESCALATE_HR=${counters.ESCALATE_HR}`,
       `SKIP=${counters.SKIP}`,
     ].join(' ')
   )
@@ -53,8 +51,6 @@ function markerFor(decision: Decision): string {
       return 'OK'
     case 'NEED_REVIEW':
       return 'REVIEW'
-    case 'ESCALATE_HR':
-      return 'HR'
     case 'SKIP':
       return 'SKIP'
   }

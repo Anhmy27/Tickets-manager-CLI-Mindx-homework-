@@ -25,11 +25,11 @@ const baseTicket: OdooTicket = {
   tags: ['LMS', 'Login'],
 }
 
-test('analyzeTicket: marks login candidate from strong title/description intent', () => {
+test('analyzeTicket: marks login candidate from login tag', () => {
   const analysis = analyzeTicket(baseTicket, defaultRules)
 
   assert.equal(analysis.kind, 'login_candidate')
-  assert.equal(analysis.reason.includes('strong login intent'), true)
+  assert.equal(analysis.reason.includes('login tag'), true)
 })
 
 test('analyzeTicket: skips ticket when stage is not intake stage', () => {
@@ -51,7 +51,7 @@ test('analyzeTicket: skips ticket when login signals are missing', () => {
   )
 
   assert.equal(analysis.kind, 'skip')
-  assert.equal(analysis.reason.includes('missing login tag'), true)
+  assert.equal(analysis.reason.includes('no login signals'), true)
 })
 
 test('analyzeTicket: skips content/file issue because no login intent', () => {
@@ -66,10 +66,10 @@ test('analyzeTicket: skips content/file issue because no login intent', () => {
   )
 
   assert.equal(analysis.kind, 'skip')
-  assert.equal(analysis.reason.includes('missing login tag'), true)
+  assert.equal(analysis.reason.includes('no login signals'), true)
 })
 
-test('analyzeTicket: skips even with login text when login tag is missing', () => {
+test('analyzeTicket: allows title login signal when login tag is missing', () => {
   const analysis = analyzeTicket(
     {
       ...baseTicket,
@@ -80,8 +80,38 @@ test('analyzeTicket: skips even with login text when login tag is missing', () =
     defaultRules
   )
 
-  assert.equal(analysis.kind, 'skip')
-  assert.equal(analysis.reason.includes('missing login tag'), true)
+  assert.equal(analysis.kind, 'login_candidate')
+  assert.equal(analysis.reason.includes('title'), true)
+})
+
+test('analyzeTicket: allows description login signal when login tag is missing', () => {
+  const analysis = analyzeTicket(
+    {
+      ...baseTicket,
+      name: 'Vấn đề LMS chung',
+      description: 'User báo invalid username or password từ sáng',
+      tags: ['LMS'],
+    },
+    defaultRules
+  )
+
+  assert.equal(analysis.kind, 'login_candidate')
+  assert.equal(analysis.reason.includes('description'), true)
+})
+
+test('analyzeTicket: allows tag-only signal when title and description do not match', () => {
+  const analysis = analyzeTicket(
+    {
+      ...baseTicket,
+      name: 'Vấn đề LMS chung',
+      description: 'Need support ASAP',
+      tags: ['Login'],
+    },
+    defaultRules
+  )
+
+  assert.equal(analysis.kind, 'login_candidate')
+  assert.equal(analysis.reason.includes('login tag'), true)
 })
 
 test('analyzeTicket: allows description-only signal when login tag exists', () => {
@@ -96,6 +126,7 @@ test('analyzeTicket: allows description-only signal when login tag exists', () =
   )
 
   assert.equal(analysis.kind, 'login_candidate')
+  assert.equal(analysis.reason.includes('login tag'), true)
 })
 
 test('analyzeTicket: allows title-only signal when login tag exists', () => {
@@ -110,4 +141,5 @@ test('analyzeTicket: allows title-only signal when login tag exists', () => {
   )
 
   assert.equal(analysis.kind, 'login_candidate')
+  assert.equal(analysis.reason.includes('login tag'), true)
 })

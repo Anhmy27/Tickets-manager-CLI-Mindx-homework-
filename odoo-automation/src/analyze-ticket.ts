@@ -18,20 +18,26 @@ export function analyzeTicket(ticket: OdooTicket, rules: AutomationRuleSet): Tic
   }
 
   const tagMatched = tagsContainAny(ticket.tags, rules.tagKeywords)
-  if (!tagMatched) {
+  if (tagMatched) {
     return {
-      kind: 'skip',
-      reason: 'skip: missing login tag',
+      kind: 'login_candidate',
+      reason: 'matched login tag',
     }
   }
 
   const titleMatched = containsAny(ticket.name, rules.titleKeywords)
-  const descriptionMatched = containsAny(ticket.description, rules.descriptionKeywords)
-
-  if (titleMatched || descriptionMatched) {
+  if (titleMatched) {
     return {
       kind: 'login_candidate',
-      reason: 'matched strong login intent (title/description)',
+      reason: 'matched login title intent',
+    }
+  }
+
+  const descriptionMatched = containsAny(ticket.description, rules.descriptionKeywords)
+  if (descriptionMatched) {
+    return {
+      kind: 'login_candidate',
+      reason: 'matched login description intent',
     }
   }
 

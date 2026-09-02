@@ -92,13 +92,14 @@ test('processTicket: auto resolves deactivated account when HR is active', async
   assert.equal(noteIndex < mailIndex, true)
 })
 
-test('processTicket: escalates when HR status is terminated', async () => {
+test('processTicket: marks review when HR status is terminated', async () => {
   const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'terminated', lmsStatus: 'deactivated' })
 
   const result = await processTicket(ticket, rules, deps)
 
-  assert.equal(result.decision, 'ESCALATE_HR')
+  assert.equal(result.decision, 'NEED_REVIEW')
   assert.equal(result.needsHumanAck, true)
+  assert.equal(result.reason.includes('HR=terminated'), true)
   assert.equal(deps.events.some((item) => item.startsWith('reactivate:')), false)
   assert.equal(deps.events.some((item) => item.startsWith('mail:')), false)
   assert.equal(deps.events.some((item) => item.startsWith('note:')), true)
@@ -164,13 +165,14 @@ test('processTicket: does not duplicate NEED_REVIEW note when bot note already e
   assert.equal(deps.events.some((item) => item.startsWith('note:')), false)
 })
 
-test('processTicket: does not duplicate ESCALATE_HR note when bot note already exists', async () => {
+test('processTicket: does not duplicate NEED_REVIEW note for terminated HR when bot note already exists', async () => {
   const deps = createDeps({ email: ticket.emailFrom, hrStatus: 'terminated', lmsStatus: 'deactivated' })
   deps.odooClient.hasAutomationNote = async () => true
 
   const result = await processTicket(ticket, rules, deps)
 
-  assert.equal(result.decision, 'ESCALATE_HR')
+  assert.equal(result.decision, 'NEED_REVIEW')
+  assert.equal(result.reason.includes('HR=terminated'), true)
   assert.equal(result.reason.includes('already noted'), true)
   assert.equal(deps.events.some((item) => item.startsWith('note:')), false)
 })

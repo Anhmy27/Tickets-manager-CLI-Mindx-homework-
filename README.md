@@ -71,7 +71,7 @@ cd ../kb-api-server && npm test
 `odoo-automation` là package độc lập để xử lý ticket đăng nhập trong Odoo:
 
 - Quét ticket ở stage intake theo `requiredStageId`.
-- Nhận diện login issue theo rules (`tags/title/description`).
+- Nhận diện login issue theo rules, ưu tiên tag rồi fallback sang title/description.
 - Check trạng thái nhân sự từ **mock HR** và trạng thái tài khoản từ **mock LMS**.
 - Chỉ auto xử lý case `LMS=deactivated` + `HR=active`.
 - Các case còn lại ghi note nội bộ để agent xử lý thủ công.
