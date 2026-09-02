@@ -1,31 +1,31 @@
 # odoo-automation
 
-Week 5 automation script for Odoo login tickets.
+Script tự động hóa tuần 5 cho nhóm ticket đăng nhập trên Odoo.
 
-## Scope
+## Phạm vi
 
-- Scan tickets in intake stage by ID (`requiredStageId`).
-- Detect login candidates from `tagKeywords` plus strong title/description intent.
-- Check mock HR + mock LMS status by ticket email.
-- Auto resolve only when `LMS=deactivated` and `HR=active`.
-- Auto-resolve action order is: move stage -> internal note -> customer reply.
-- Support Odoo Studio webhook envelopes (`_id`) and standard payload shapes (`id`, `data.id`).
-- Skip safely when ticket has no valid customer email (no crash, no side effects).
+- Quét ticket ở stage intake theo ID (`requiredStageId`).
+- Nhận diện ticket login theo `tagKeywords` kết hợp tín hiệu mạnh từ title/description.
+- Kiểm tra trạng thái HR (mock) và LMS (mock) theo email trong ticket.
+- Chỉ auto resolve khi `LMS=deactivated` và `HR=active`.
+- Thứ tự `AUTO_RESOLVE`: đổi stage -> ghi note nội bộ -> gửi phản hồi khách hàng.
+- Hỗ trợ payload webhook của Odoo Studio (`_id`) và các dạng phổ biến (`id`, `data.id`).
+- Nếu ticket không có email hợp lệ thì `SKIP` an toàn (không crash, không side effects).
 
-## SLA interpretation
+## Diễn giải SLA
 
-- Ticket logging/prioritization (`15m`) is handled by Odoo process.
-- Initial response (`30m`) remains required.
-  - `AUTO_RESOLVE`: this script sends one merged ACK + resolved reply.
-  - `NEED_REVIEW`/`ESCALATE_HR`: script posts internal note, human agent sends ACK and continues manually.
+- Bước ghi nhận/ưu tiên ticket (`15m`) do quy trình Odoo xử lý.
+- Bước phản hồi ban đầu (`30m`) vẫn giữ nguyên yêu cầu.
+  - `AUTO_RESOLVE`: script gửi một phản hồi gộp ACK + hướng đã xử lý.
+  - `NEED_REVIEW`/`ESCALATE_HR`: script chỉ ghi note nội bộ, agent xử lý thủ công tiếp.
 
-## Setup
+## Cài đặt
 
-1. Copy `.env.example` to `.env` and fill real values.
-2. Edit `ticket-rules.json` after reviewing your Odoo export/patterns (including stage IDs).
-3. Edit `mock-users.json` with the exact test emails used in Odoo tickets.
+1. Copy `.env.example` thành `.env` và điền giá trị thật.
+2. Sửa `ticket-rules.json` theo dữ liệu/pattern bạn xuất từ Odoo (bao gồm stage IDs).
+3. Sửa `mock-users.json` theo đúng email test dùng trong ticket Odoo.
 
-## Commands
+## Lệnh chạy
 
 ```bash
 npm install
@@ -34,27 +34,27 @@ npm start
 npm run dev
 ```
 
-- `npm start`: one-shot scan mode from intake stage.
-- `npm run dev`: webhook mode with Express server on `POST /webhook`.
+- `npm start`: chế độ quét một lần từ intake stage.
+- `npm run dev`: chế độ webhook với Express server tại `POST /webhook`.
 
-## Expected decisions
+## Các quyết định đầu ra
 
-- `AUTO_RESOLVE`: reactivated in mock LMS, moved to resolved stage, internal note posted, customer reply posted.
-- `NEED_REVIEW`: internal note only, needs human ACK.
-- `ESCALATE_HR`: internal note only, no reactivation.
-- `SKIP`: no Odoo updates (includes missing login signal or missing customer email).
+- `AUTO_RESOLVE`: kích hoạt lại tài khoản trong mock LMS, đổi sang resolved stage, ghi note nội bộ, gửi phản hồi khách hàng.
+- `NEED_REVIEW`: chỉ ghi note nội bộ, cần agent ACK và xử lý tiếp.
+- `ESCALATE_HR`: chỉ ghi note nội bộ, không kích hoạt lại tài khoản.
+- `SKIP`: không cập nhật gì lên Odoo (bao gồm thiếu tín hiệu login hoặc thiếu email khách hàng).
 
-## Stage source of truth
+## Nguồn cấu hình stage
 
-`requiredStageId` and `resolvedStageId` are configured only in `ticket-rules.json`.
+`requiredStageId` và `resolvedStageId` chỉ cấu hình trong `ticket-rules.json`.
 
-`NEED_REVIEW` is only used after a ticket is confirmed as login-related.
+`NEED_REVIEW` chỉ dùng sau khi ticket đã được xác nhận là login-related.
 
-This version does not use `skipKeywords`; skip is determined by rule checks (stage/tag/intent) or missing customer email.
+Phiên bản này không dùng `skipKeywords`; `SKIP` được quyết định theo rule checks (stage/tag/intent) hoặc thiếu email khách hàng.
 
-## Webhook payload notes
+## Ghi chú payload webhook
 
-When using Odoo Studio automation "Send webhook notification", payload may include:
+Khi dùng Odoo Studio automation "Send webhook notification", payload có thể có dạng:
 
 ```json
 {
@@ -64,4 +64,4 @@ When using Odoo Studio automation "Send webhook notification", payload may inclu
 }
 ```
 
-This project accepts `_id` directly as ticket ID for webhook processing.
+Project này nhận trực tiếp `_id` làm ticket ID để xử lý webhook.
