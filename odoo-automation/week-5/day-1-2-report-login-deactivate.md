@@ -78,3 +78,38 @@ Chọn automation cho login deactivate là quyết định phù hợp với mụ
 - Có điều kiện quyết định rõ
 - Triển khai nhanh và đo được hiệu quả
 - Giữ được ranh giới giữa Operating Engineer và Software Engineer
+
+## 9) Data source và cách thống kê
+
+Nguồn dữ liệu phân tích:
+
+- File export Odoo: `Phiếu hỗ trợ (helpdesk.ticket).xlsx`
+- Sau khi gom theo cột `Trình tự ID phiếu hỗ trợ`, tổng số ticket duy nhất là **16**.
+
+Lưu ý xử lý dữ liệu:
+
+- File export có nhiều dòng phụ do mỗi tag có thể tách thành dòng riêng.
+- Vì vậy cần gom theo ticket ID trước khi đếm để tránh nhân đôi số lượng.
+- Phân loại issue dựa trên tiêu đề ticket + tag trong cùng ticket.
+
+Evidence đi kèm khi nộp:
+
+- File export `.xlsx` ở trên.
+- 2-4 ảnh report/screen từ Odoo (volume theo ngày, category, trend).
+
+## 10) Phân bố issue thực tế (từ file Excel)
+
+| Issue pattern | Ticket count | Ticket refs (evidence) | Nhận xét |
+|---|---:|---|---|
+| Login issue (không đăng nhập được) | 8 | 00003, 00011, 00012, 00014, 00016, 00019, 00020, 00021 | Nhóm lớn nhất, chiếm 50% |
+| Video playback issue | 3 | 00007, 00008, 00009 | Lặp theo cùng pattern nội dung |
+| Feature/reporting request | 2 | 00006, 00010 | Mang tính yêu cầu nghiệp vụ |
+| Performance issue | 1 | 00004 | Cần theo dõi thêm vì có thể tăng theo tải |
+| Critical outage (submission down) | 1 | 00005 | Mức độ nghiêm trọng cao nhưng đơn lẻ |
+| Content access/download issue | 1 | 00013 | Không lặp đủ lớn trong dataset hiện tại |
+
+Kết luận định lượng:
+
+- Login issue là nhóm cao nhất: **8/16 ticket (50%)**.
+- Nhóm này có quy trình xử lý lặp rõ ràng (check HR/LMS -> quyết định -> phản hồi), nên phù hợp nhất để ưu tiên automation ở tuần 5.
+
