@@ -2,35 +2,38 @@
 
 Repository này chứa bài làm MindX Engineer Onboarding:
 
-README root này chỉ để định hướng nhanh. Chi tiết chạy/cài đặt nằm trong README của từng package.
+README root này chỉ để định hướng nhanh theo tuần. Chi tiết chạy/cài đặt nằm trong README của từng package.
 
 ## Cấu trúc hiện tại
 
-| Folder                                                                 | Vai trò                                                     |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`docs/plans/`](./docs/plans/)                                         | Kế hoạch và mục tiêu theo tuần                              |
-| [`ticket-manager-cli/`](./ticket-manager-cli/)                         | Ứng dụng CLI chính (ticket + KB commands)                   |
-| [`kb-api-client/`](./kb-api-client/)                                   | HTTP client package để gọi KB API                           |
-| [`kb-api-server/`](./kb-api-server/)                                   | KB API server chạy độc lập cho HTTP mode end-to-end         |
-| [`odoo-automation/`](./odoo-automation/)                               | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
-| [`week-1/tdd-foundation/`](./week-1/tdd-foundation/)                   | Nghiên cứu nền tảng TDD + Hexagonal (Week 1)                |
-| [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Ghi chú, transcript và artifact quá trình làm bài           |
+| Folder                                               | Vai trò                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------- |
+| [`week-1/`](./week-1/)                               | Nghiên cứu nền tảng TDD + Hexagonal                         |
+| [`week-2/ticket-manager-cli/`](./week-2/ticket-manager-cli/) | Ứng dụng CLI chính (ticket + KB commands)             |
+| [`week-3/kb-api-client/`](./week-3/kb-api-client/)   | HTTP client package để gọi KB API                           |
+| [`week-3/kb-api-server/`](./week-3/kb-api-server/)   | KB API server chạy độc lập cho HTTP mode end-to-end         |
+| [`week-4/`](./week-4/)                               | CS/OE training, ticket handling, scenario và AI summary     |
+| [`week-5/odoo-automation/`](./week-5/odoo-automation/) | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
+| [`docs/plans/`](./docs/plans/)                       | Kế hoạch và mục tiêu theo tuần                              |
 
 ## Nên đọc theo thứ tự
 
-1. [`docs/plans/week-3/overview.md`](./docs/plans/week-3/overview.md)
-2. [`ticket-manager-cli/README.md`](./ticket-manager-cli/README.md)
-3. [`kb-api-server/README.md`](./kb-api-server/README.md)
-4. [`kb-api-client/README.md`](./kb-api-client/README.md)
-5. [`docs/plans/week-5/overview.vi.md`](./docs/plans/week-5/overview.vi.md)
-6. [`odoo-automation/README.md`](./odoo-automation/README.md)
+1. [`week-1/tdd-foundation/README.md`](./week-1/tdd-foundation/README.md)
+2. [`week-2/research/ai-summary.md`](./week-2/research/ai-summary.md)
+3. [`week-2/ticket-manager-cli/README.md`](./week-2/ticket-manager-cli/README.md)
+4. [`week-3/research/ai-summary.md`](./week-3/research/ai-summary.md)
+5. [`week-3/kb-api-server/README.md`](./week-3/kb-api-server/README.md)
+6. [`week-3/kb-api-client/README.md`](./week-3/kb-api-client/README.md)
+7. [`week-4/research/ai-summary.md`](./week-4/research/ai-summary.md)
+8. [`week-5/research/ai-summary.md`](./week-5/research/ai-summary.md)
+9. [`week-5/odoo-automation/README.md`](./week-5/odoo-automation/README.md)
 
 ## Chạy nhanh end-to-end (HTTP mode)
 
 ### 1) Chạy server
 
 ```bash
-cd kb-api-server
+cd week-3/kb-api-server
 npm install
 npm start
 ```
@@ -40,7 +43,7 @@ Mặc định server listen ở `http://127.0.0.1:4100`.
 ### 2) Chạy CLI
 
 ```bash
-cd ticket-manager-cli
+cd week-2/ticket-manager-cli
 npm install
 copy .env.example .env
 ```
@@ -61,14 +64,14 @@ npx tsx src/cli.ts kb search "response" --top-k 3
 ## Test nhanh
 
 ```bash
-cd ticket-manager-cli && npm test
-cd ../kb-api-client && npm test
+cd week-2/ticket-manager-cli && npm test
+cd ../../week-3/kb-api-client && npm test
 cd ../kb-api-server && npm test
 ```
 
 ## Tuần 5: Odoo automation (login issue)
 
-`odoo-automation` là package độc lập để xử lý ticket đăng nhập trong Odoo:
+`week-5/odoo-automation` là package độc lập để xử lý ticket đăng nhập trong Odoo:
 
 - Quét ticket ở stage intake theo `requiredStageId`.
 - Nhận diện login issue theo rules, ưu tiên tag rồi fallback sang title/description.
@@ -79,7 +82,7 @@ cd ../kb-api-server && npm test
 ### Chạy nhanh
 
 ```bash
-cd odoo-automation
+cd week-5/odoo-automation
 npm install
 copy .env.example .env
 npm test
@@ -99,6 +102,6 @@ ODOO_LOGIN=your-odoo-login@example.com
 ODOO_API_KEY=replace-with-your-api-key
 ```
 
-`requiredStageId` và `resolvedStageId` được cấu hình trong `odoo-automation/ticket-rules.json` (single source of truth).
+`requiredStageId` và `resolvedStageId` được cấu hình trong `week-5/odoo-automation/ticket-rules.json` (single source of truth).
 
-Chi tiết flow quyết định, SLA ACK và nội dung note/mail nằm trong [`odoo-automation/README.md`](./odoo-automation/README.md).
+Chi tiết flow quyết định, SLA ACK và nội dung note/mail nằm trong [`week-5/odoo-automation/README.md`](./week-5/odoo-automation/README.md).

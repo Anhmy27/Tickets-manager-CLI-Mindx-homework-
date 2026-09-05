@@ -8,7 +8,6 @@
 !/week-4/
 !/week-5/
 !/week-1/tdd-foundation/
-!/research-and-ai-implementation/
 
 # Không commit dependencies cài local
 /week-3/kb-api-server/node_modules/
