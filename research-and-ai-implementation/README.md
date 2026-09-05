@@ -39,7 +39,7 @@ Phiên AI tuần 5: chuẩn bị báo cáo/automation, tích hợp Odoo webhook,
 
 ## Liên quan
 
-- Research Week 1 (TDD + Hexagonal): [`research-week-1/`](../research-week-1/)
+- TDD foundation Week 1: [`week-1/tdd-foundation/`](../week-1/tdd-foundation/)
 - Source CLI: [`ticket-manager-cli/`](../ticket-manager-cli/)
 - HTTP client: [`kb-api-client/`](../kb-api-client/)
 - KB API server: [`kb-api-server/`](../kb-api-server/)

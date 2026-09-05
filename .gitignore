@@ -1,16 +1,17 @@
-# Chỉ theo dõi thư mục bài làm, tài liệu research AI, và README GitHub
+# Chỉ theo dõi các tuần bài làm, tài liệu research AI, và README GitHub
 /*
 !/.gitignore
 !/README.md
-!/ticket-manager-cli/
-!/kb-api-client/
-!/kb-api-server/
-!/odoo-automation/
-!/research-week-1/
+!/week-1/
+!/week-2/
+!/week-3/
+!/week-4/
+!/week-5/
+!/week-1/tdd-foundation/
 !/research-and-ai-implementation/
 
 # Không commit dependencies cài local
-/kb-api-server/node_modules/
-/odoo-automation/node_modules/
-/odoo-automation/dist/
-/odoo-automation/.env
+/week-3/kb-api-server/node_modules/
+/week-5/odoo-automation/node_modules/
+/week-5/odoo-automation/dist/
+/week-5/odoo-automation/.env

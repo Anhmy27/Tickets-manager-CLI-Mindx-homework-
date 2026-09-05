@@ -12,7 +12,7 @@ Hoàn thiện Ticket Manager CLI Week 2: implement business logic, làm test pas
 ### 1. Setup Git repository
 
 - Cấu hình root `.gitignore` chỉ track `ticket-manager-cli/` (ban đầu).
-- Sau mở thêm `research-and-ai-implementation/`, `research-week-1/`.
+- Sau mở thêm `research-and-ai-implementation/`, `week-1/tdd-foundation/`.
 - Giải thích `.gitkeep` giữ folder `data/` trên git.
 
 ### 2. Nắm yêu cầu & implement Green phase
@@ -84,4 +84,4 @@ Hoàn thiện Ticket Manager CLI Week 2: implement business logic, làm test pas
 
 - Source: [`ticket-manager-cli/`](../../ticket-manager-cli/)
 - Test catalog: [`ticket-manager-cli/TEST-CATALOG.md`](../../ticket-manager-cli/TEST-CATALOG.md)
-- Research Week 1: [`research-week-1/`](../../research-week-1/)
+- TDD foundation Week 1: [`week-1/tdd-foundation/`](../../week-1/tdd-foundation/)

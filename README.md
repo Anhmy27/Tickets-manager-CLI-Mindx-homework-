@@ -13,7 +13,7 @@ README root này chỉ để định hướng nhanh. Chi tiết chạy/cài đ�
 | [`kb-api-client/`](./kb-api-client/)                                   | HTTP client package để gọi KB API                           |
 | [`kb-api-server/`](./kb-api-server/)                                   | KB API server chạy độc lập cho HTTP mode end-to-end         |
 | [`odoo-automation/`](./odoo-automation/)                               | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
-| [`research-week-1/`](./research-week-1/)                               | Research Week 1 (TDD + Hexagonal)                           |
+| [`week-1/tdd-foundation/`](./week-1/tdd-foundation/)                   | Nghiên cứu nền tảng TDD + Hexagonal (Week 1)                |
 | [`research-and-ai-implementation/`](./research-and-ai-implementation/) | Ghi chú, transcript và artifact quá trình làm bài           |
 
 ## Nên đọc theo thứ tự

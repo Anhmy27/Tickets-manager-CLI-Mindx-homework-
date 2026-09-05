@@ -20,7 +20,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "kb-api-client": "file:../kb-api-client"
+    "kb-api-client": "file:../../week-3/kb-api-client"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
