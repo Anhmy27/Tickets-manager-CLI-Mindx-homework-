@@ -2,8 +2,6 @@
 
 Tài liệu research Week 1 của MindX Engineer Onboarding: AI workflows, TDD, và Hexagonal Architecture (học thêm).
 
-Folder này nằm ở root repository và đã được mở trong `.gitignore`, nên có thể add/commit/push lên Git.
-
 ## Nội dung
 
 | File | Mô tả |
@@ -29,5 +27,5 @@ Chi tiết workflow gắn với từng phần research nằm trong từng file v
 ## Ghi chú
 
 - Homework chính thức Week 1 yêu cầu research **TDD**.
-- Research **Hexagonal** là phần học thêm, áp dụng khi implement Week 2 ([`ticket-manager-cli/`](../ticket-manager-cli/)).
-- Source Week 2 hiện viết bằng **TypeScript**; hướng dẫn chạy lệnh xem [`ticket-manager-cli/README.md`](../ticket-manager-cli/README.md).
+- Research **Hexagonal** là phần học thêm, áp dụng khi implement Week 2 ([`ticket-manager-cli/`](../../week-2/ticket-manager-cli/)).
+- Source Week 2 hiện viết bằng **TypeScript**; hướng dẫn chạy lệnh xem [`ticket-manager-cli/README.md`](../../week-2/ticket-manager-cli/README.md).
