@@ -1,99 +1,104 @@
 # Tickets Manager CLI — MindX Homework
 
-Repository này chứa bài làm MindX Engineer Onboarding:
+Bài làm MindX Engineer Onboarding, tổ chức theo tuần. Chi tiết sâu nằm trong README của từng package.
 
-README root này chỉ để định hướng nhanh theo tuần. Chi tiết chạy/cài đặt nằm trong README của từng package.
+## Cấu trúc theo tuần
 
-## Cấu trúc hiện tại
+| Tuần | Nội dung | Đi vào |
+|------|----------|--------|
+| Week 1 | Research TDD + Hexagonal | [`week-1/tdd-foundation/`](./week-1/tdd-foundation/) · [`research`](./week-1/research/ai-summary.md) |
+| Week 2 | Ticket Manager CLI | [`week-2/ticket-manager-cli/`](./week-2/ticket-manager-cli/) · [`research`](./week-2/research/ai-summary.md) |
+| Week 3 | KB HTTP client + server | [`week-3/kb-api-client/`](./week-3/kb-api-client/) · [`week-3/kb-api-server/`](./week-3/kb-api-server/) · [`research`](./week-3/research/ai-summary.md) |
+| Week 4 | CS / Operating Engineer | [`week-4/research/ai-summary.md`](./week-4/research/ai-summary.md) |
+| Week 5 | Odoo automation (login issue) | [`week-5/odoo-automation/`](./week-5/odoo-automation/) · [`research`](./week-5/research/ai-summary.md) |
 
-| Folder                                               | Vai trò                                                     |
-| ---------------------------------------------------- | ----------------------------------------------------------- |
-| [`week-1/`](./week-1/)                               | Nghiên cứu nền tảng TDD + Hexagonal                         |
-| [`week-2/ticket-manager-cli/`](./week-2/ticket-manager-cli/) | Ứng dụng CLI chính (ticket + KB commands)             |
-| [`week-3/kb-api-client/`](./week-3/kb-api-client/)   | HTTP client package để gọi KB API                           |
-| [`week-3/kb-api-server/`](./week-3/kb-api-server/)   | KB API server chạy độc lập cho HTTP mode end-to-end         |
-| [`week-4/`](./week-4/)                               | CS/OE training, ticket handling, scenario và AI summary     |
-| [`week-5/odoo-automation/`](./week-5/odoo-automation/) | Bot tự động hóa ticket login trên Odoo (mock HR + mock LMS) |
-| [`docs/plans/`](./docs/plans/)                       | Kế hoạch và mục tiêu theo tuần                              |
+## Week 2–3: Ticket CLI + KB
 
-## Nên đọc theo thứ tự
-
-1. [`week-1/tdd-foundation/README.md`](./week-1/tdd-foundation/README.md)
-2. [`week-2/research/ai-summary.md`](./week-2/research/ai-summary.md)
-3. [`week-2/ticket-manager-cli/README.md`](./week-2/ticket-manager-cli/README.md)
-4. [`week-3/research/ai-summary.md`](./week-3/research/ai-summary.md)
-5. [`week-3/kb-api-server/README.md`](./week-3/kb-api-server/README.md)
-6. [`week-3/kb-api-client/README.md`](./week-3/kb-api-client/README.md)
-7. [`week-4/research/ai-summary.md`](./week-4/research/ai-summary.md)
-8. [`week-5/research/ai-summary.md`](./week-5/research/ai-summary.md)
-9. [`week-5/odoo-automation/README.md`](./week-5/odoo-automation/README.md)
-
-## Chạy nhanh end-to-end (HTTP mode)
-
-### 1) Chạy server
+### Cài đặt
 
 ```bash
+# 1) Cài và chạy KB API server (HTTP mode)
 cd week-3/kb-api-server
 npm install
 npm start
-```
+# Server mặc định listen: http://127.0.0.1:4100
 
-Mặc định server listen ở `http://127.0.0.1:4100`.
-
-### 2) Chạy CLI
-
-```bash
+# 2) Terminal khác — cài CLI
 cd week-2/ticket-manager-cli
 npm install
 copy .env.example .env
 ```
 
-Sửa `.env`:
+Trong `.env` của CLI:
 
 ```env
+# mock = dùng MockKBClient in-memory
+# http = gọi kb-api-server qua kb-api-client
 KB_CLIENT_MODE=http
 KB_API_BASE_URL=http://127.0.0.1:4100
 ```
 
-Chạy lệnh:
+### Chạy CLI
 
 ```bash
+cd week-2/ticket-manager-cli
+
+# Cách chạy chung
+npx tsx src/cli.ts <command>
+# hoặc
+npm start -- <command>
+```
+
+### Lệnh ticket
+
+```bash
+# Tạo ticket mới
+npx tsx src/cli.ts create --title "Bug login" --description "Cannot sign in" --priority high --tags login,lms
+
+# Liệt kê ticket (có thể lọc status / priority / tags)
+npx tsx src/cli.ts list
+npx tsx src/cli.ts list --status open --priority high
+
+# Xem chi tiết theo id
+npx tsx src/cli.ts show <ticket-id>
+
+# Cập nhật status (Week 2 chỉ đổi status)
+npx tsx src/cli.ts update <ticket-id> --status in_progress
+```
+
+### Lệnh KB
+
+```bash
+# Tìm document theo query
 npx tsx src/cli.ts kb search "response" --top-k 3
+
+# Liệt kê document trong một nhánh KB
+npx tsx src/cli.ts kb list --node /templates/email --limit 5
+
+# Lấy full document theo id
+npx tsx src/cli.ts kb retrieve <doc-id>
+
+# Thêm document từ file markdown vào KB
+npx tsx src/cli.ts kb add --file ./note.md --path /templates/email --title "ACK template"
 ```
 
-## Test nhanh
+### Test Week 2–3
 
 ```bash
-cd week-2/ticket-manager-cli && npm test
-cd ../../week-3/kb-api-client && npm test
-cd ../kb-api-server && npm test
+cd week-2/ticket-manager-cli && npm test   # ticket CLI + kb mock/http wiring
+cd ../../week-3/kb-api-client && npm test  # HTTP client package
+cd ../kb-api-server && npm test            # KB API server
 ```
 
-## Tuần 5: Odoo automation (login issue)
-
-`week-5/odoo-automation` là package độc lập để xử lý ticket đăng nhập trong Odoo:
-
-- Quét ticket ở stage intake theo `requiredStageId`.
-- Nhận diện login issue theo rules, ưu tiên tag rồi fallback sang title/description.
-- Check trạng thái nhân sự từ **mock HR** và trạng thái tài khoản từ **mock LMS**.
-- Chỉ auto xử lý case `LMS=deactivated` + `HR=active`.
-- Các case còn lại ghi note nội bộ để agent xử lý thủ công.
-
-### Chạy nhanh
+## Week 5: Odoo automation
 
 ```bash
 cd week-5/odoo-automation
 npm install
 copy .env.example .env
-npm test
-npm start
-npm run dev
 ```
 
-- `npm start`: quét một lần các ticket ở stage intake.
-- `npm run dev`: chạy webhook server (`POST /webhook`) để nhận ticket real-time từ Odoo/ngrok.
-
-### Biến môi trường chính
+Trong `.env` điền credentials Odoo:
 
 ```env
 ODOO_URL=https://mindx-training.odoo.com
@@ -102,6 +107,18 @@ ODOO_LOGIN=your-odoo-login@example.com
 ODOO_API_KEY=replace-with-your-api-key
 ```
 
-`requiredStageId` và `resolvedStageId` được cấu hình trong `week-5/odoo-automation/ticket-rules.json` (single source of truth).
+Stage IDs cấu hình trong `ticket-rules.json` (`requiredStageId`, `resolvedStageId`).
 
-Chi tiết flow quyết định, SLA ACK và nội dung note/mail nằm trong [`week-5/odoo-automation/README.md`](./week-5/odoo-automation/README.md).
+```bash
+npm test       # chạy unit test
+npm start      # quét một lần ticket ở stage intake, xử lý theo rule
+npm run dev    # chạy webhook server: POST /webhook, GET /health
+```
+
+Quyết định chính:
+
+- `AUTO_RESOLVE` — `LMS=deactivated` + `HR=active` → reactive mock LMS, move stage, note nội bộ, reply khách
+- `NEED_REVIEW` — login issue nhưng chưa đủ điều kiện auto → chỉ ghi note nội bộ
+- `SKIP` — không thuộc scope / thiếu email → không side effect
+
+Chi tiết: [`week-5/odoo-automation/README.md`](./week-5/odoo-automation/README.md)
