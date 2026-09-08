@@ -1,7 +1,6 @@
 # Báo cáo phân tích ticket sample và lựa chọn automation login
 
 **Nguồn dữ liệu:** `docs/plans/week-5/data/sample.xlsx`  
-**File tham chiếu đã phân tích:** `docs/plans/week-5/data/ticket-analysis-filled.xlsx`  
 **Phạm vi bài:** Week 5 - Reporting, Analysis & Automation Implementation
 
 ---
@@ -20,25 +19,15 @@ Theo plan Week 5, vấn đề được chọn để triển khai automation là 
 
 ---
 
-## 2. Nguồn dữ liệu và cách xử lý
+## 2. Nguồn dữ liệu
 
-File `sample.xlsx` là export ticket từ Odoo Helpdesk. File này có nhiều dòng phụ cho tag/stage, nên không nên chỉ đếm số dòng Excel.
-
-Cách xử lý trong `ticket-analysis-filled.xlsx`:
-
-1. Lọc các dòng có `Subject` để lấy ticket chính.
-2. Giữ các cột quan trọng: mã ticket, tiêu đề, thẻ, priority, khách hàng, trạng thái, người xử lý, bộ phận.
-3. Phân loại ticket theo pattern bằng `Subject + Tags`.
-4. Tạo sheet tổng hợp pattern.
-5. Tách riêng các ticket thuộc nhóm Login / Account để phục vụ bài automation.
-
-Kết quả: **131 ticket được đưa vào phân tích pattern**.
+Report dùng file `docs/plans/week-5/data/sample.xlsx` — export ticket từ Odoo Helpdesk. Sau khi gom theo mã ticket và phân loại bằng `Subject + Tags`, dataset có **131 ticket** để phân tích pattern.
 
 ---
 
 ## 3. Tổng quan pattern ticket
 
-Trong file `ticket-analysis-filled.xlsx`, các ticket được gom thành 7 nhóm chính:
+Các ticket trong sample được gom thành 7 nhóm chính:
 
 ```mermaid
 pie title Pattern ticket trong sample (131)
@@ -162,21 +151,11 @@ Từ góc nhìn Operating Engineer, **Login / Account là nhóm phù hợp nhấ
 
 ---
 
-## 6. Root cause giả định cho Scenario 1
+## 6. Phạm vi xử lý Login Issue
 
-Theo plan Week 5, Scenario 1 là lỗi đăng nhập do account bị deactivate sau một thời gian không hoạt động.
+Pattern Login / Account trong sample cho thấy nhiều ticket liên quan đến không đăng nhập được, quên mật khẩu hoặc cần kiểm tra trạng thái tài khoản. Với Scenario 1 của Week 5, luồng xử lý tập trung vào trường hợp user vẫn còn hiệu lực trên HR nhưng account LMS đang bị deactivate.
 
-Root cause giả định:
-
-> Tài khoản LMS có thể bị deactivate sau 30 ngày không hoạt động. User vẫn còn active trên HR nhưng không đăng nhập được LMS.
-
-Điểm cần phân biệt:
-
-- Đây là root cause giả định của **Scenario 1**.
-- Dữ liệu `sample.xlsx` chỉ giúp nhận diện pattern Login / Account.
-- Muốn chứng minh chính xác mọi login ticket đều do deactivate thì cần thêm description, comment hoặc resolution history.
-
-Vì vậy automation không được tự xử lý mọi ticket login. Tool chỉ xử lý khi check được điều kiện rõ ràng.
+Không phải mọi ticket login đều thuộc nhánh này. Một số case có thể do quên mật khẩu, thiếu account, user inactive hoặc lỗi hệ thống. Vì vậy automation chỉ xử lý khi đủ điều kiện kiểm tra được, còn lại chuyển support review.
 
 ---
 
