@@ -150,51 +150,56 @@ Từ bảng trên, login LMS là lựa chọn hợp lý nhất cho homework vì 
 
 ---
 
-## 6. Giả định xử lý cho ticket login
+## 6. Decision flow cho ticket login
 
-Sau khi chọn nhóm login, em tách các nhánh xử lý để tránh việc tool auto quá tay.
+Sau khi chọn nhóm login, em không để tool xử lý theo cảm tính từng ticket. Em tách thành decision flow để mỗi bước đều có điều kiện rõ ràng: đủ dữ liệu thì xử lý, thiếu dữ liệu hoặc rủi ro quyền truy cập thì dừng an toàn.
 
-### Trường hợp 1: HR active, LMS deactivated
+### Bước 1: Ticket có đúng là login issue không?
 
-**Giả định:** User vẫn còn hiệu lực nhưng account LMS bị deactivate.  
-**Cách xử lý:** Reactivate LMS account, cập nhật ticket, ghi note và phản hồi user.  
-**Automation:** Có thể `AUTO_RESOLVE`.
+**Giả định:** Ticket có thể có tag `LMS`, hoặc title/description chứa các từ như `login`, `đăng nhập`, `không vào được`, `ko login dc`.
 
-### Trường hợp 2: HR inactive
+**Cách xử lý:** Nếu có tín hiệu login thì đi tiếp. Nếu không có tín hiệu login thì bỏ qua vì nằm ngoài phạm vi tool Week 5.
 
-**Giả định:** User đã nghỉ hoặc không còn active trên hệ thống nhân sự.  
-**Cách xử lý:** Không tự bật lại LMS; chuyển support kiểm tra quyền truy cập.  
-**Automation:** Không auto-resolve, chuyển `NEED_REVIEW`.
+**Decision:** Không phải login issue → `SKIP`.
 
-### Trường hợp 3: Không tìm thấy LMS account
+### Bước 2: Ticket có đủ định danh user không?
 
-**Giả định:** Có thể sai email, thiếu thông tin, hoặc account chưa được tạo.  
-**Cách xử lý:** Yêu cầu bổ sung thông tin hoặc chuyển support kiểm tra.  
-**Automation:** Chỉ hỗ trợ kiểm tra và ghi note; không tự tạo account nếu chưa có rule.
+**Giả định:** Ticket login nhưng có thể thiếu email hoặc mã user, ví dụ chỉ ghi “không login được”.
 
-### Trường hợp 4: Quên mật khẩu
+**Cách xử lý:** Tool không được đoán user. Nếu không trích xuất được email/định danh hợp lệ thì yêu cầu bổ sung thông tin hoặc để support kiểm tra thủ công.
 
-**Giả định:** Account vẫn tồn tại và active, user chỉ cần reset password.  
-**Cách xử lý:** Gửi hướng dẫn reset password hoặc link tài liệu.  
-**Automation:** Có thể tự phản hồi nếu có template/KB chính xác.
+**Decision:** Thiếu email/định danh → `SKIP` hoặc hỏi bổ sung thông tin.
 
-### Trường hợp 5: Chưa có tài liệu hướng dẫn
+### Bước 3: User còn active trên HR không?
 
-**Giả định:** Support cần gửi hướng dẫn nhưng KB chưa có SOP/template.  
-**Cách xử lý:** Người phụ trách bổ sung tài liệu trước. Sau đó tool mới có thể dùng template để trả lời.  
-**Automation:** Chưa tự xử lý được.
+**Giả định:** Nếu user không còn active trên HR, việc bật lại LMS có thể cấp quyền sai cho người không còn thuộc tổ chức/lớp học.
 
-### Trường hợp 6: Đã gửi hướng dẫn nhưng user vẫn không login được
+**Cách xử lý:** Chỉ kiểm tra và ghi nhận kết quả. Tool không tự reactivate LMS cho user inactive.
 
-**Giả định:** Lỗi không nằm ở việc user thiếu hướng dẫn, có thể là account hoặc hệ thống.  
-**Cách xử lý:** Tool ghi nhận đã gửi hướng dẫn, kiểm tra thêm trạng thái account nếu có dữ liệu, rồi chuyển support nếu vẫn fail.  
-**Automation:** Một phần; không cố resolve nếu không đủ bằng chứng.
+**Decision:** HR inactive → `NEED_REVIEW`.
 
-### Trường hợp 7: Ticket thiếu email hoặc định danh user
+### Bước 4: Trạng thái account LMS là gì?
 
-**Giả định:** Ticket chỉ ghi chung chung như “không login được”.  
-**Cách xử lý:** Yêu cầu bổ sung email/mã user trước khi kiểm tra account.  
-**Automation:** Có thể tự hỏi bổ sung, nhưng không có side effect lên account.
+**Giả định:** Sau khi xác nhận user còn active, lỗi login có thể đến từ nhiều trạng thái khác nhau: LMS bị deactivated, account vẫn active nhưng quên mật khẩu, không tìm thấy account, hoặc nghi lỗi hệ thống.
+
+| Trạng thái LMS | Cách xử lý | Decision |
+| --- | --- | --- |
+| LMS deactivated + HR active | Reactivate account, ghi note, phản hồi user | `AUTO_RESOLVE` |
+| LMS active nhưng user quên mật khẩu | Gửi hướng dẫn reset nếu tool được mở rộng bằng template/KB | `NEED_REVIEW` trong phạm vi hiện tại |
+| Không tìm thấy LMS account | Không tự tạo account, chuyển support kiểm tra | `NEED_REVIEW` |
+| Nghi lỗi hệ thống / không xác định được | Ghi note và chuyển người xử lý | `NEED_REVIEW` |
+
+### Bước 5: Có tài liệu/template để phản hồi không?
+
+**Giả định:** Một số case không cần sửa account mà cần gửi hướng dẫn, ví dụ reset password hoặc cách đăng nhập đúng.
+
+**Cách xử lý:** Nếu đã có template/KB thì có thể mở rộng tool để gửi phản hồi chuẩn. Nếu chưa có tài liệu thì cần người viết SOP/template trước, sau đó automation mới dùng lại được.
+
+**Decision:** Có template rõ → có thể mở rộng automation; chưa có template → người phụ trách bổ sung docs.
+
+### Kết luận decision flow
+
+Tool chỉ được `AUTO_RESOLVE` trong case hẹp nhất: **user HR active và account LMS đang deactivated**. Các case còn lại không bị bỏ qua hoàn toàn, nhưng chỉ nên dừng ở mức hỏi thêm thông tin, gửi hướng dẫn, ghi note hoặc chuyển `NEED_REVIEW`.
 
 ---
 
