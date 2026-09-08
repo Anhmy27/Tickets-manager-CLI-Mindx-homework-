@@ -85,34 +85,40 @@ Ba nhóm lớn nhất là Thanh toán 13, Lead/trạng thái 7 và Enroll 6, t�
 
 Nhóm gồm tạo QR, add/gỡ payment, hủy hoặc confirm giao dịch, cập nhật trạng thái đóng tiền, hóa đơn và mã giảm giá. Volume cao nhưng chưa chứng minh cùng một lỗi lặp 13 lần.
 
-| Giả định | Phương án |
-| --- | --- |
-| Ticket thiếu mã lead/enrollment, số tiền hoặc yêu cầu cụ thể | Chuẩn hóa form đầu vào trước khi support xử lý |
-| Người dùng được phép tự làm nhưng chưa biết thao tác | Gửi hướng dẫn |
-| Chưa có tài liệu hướng dẫn | Bổ sung guide/SOP |
-| Đã có tài liệu nhưng user vẫn tạo ticket | Kiểm tra tài liệu có dễ tìm và còn đúng không; nếu đúng thì auto-reply kèm tài liệu |
-| Người dùng không có quyền | Route đến người/bộ phận có quyền |
-| Thao tác đúng, quyền đủ nhưng CRM vẫn lỗi | Escalate Dev kèm bước tái hiện và ảnh lỗi |
-| Thao tác tài chính bắt buộc phải có người duyệt | Giữ xử lý thủ công, không auto sửa dữ liệu payment |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| Ticket thiếu mã lead/enrollment, số tiền hoặc yêu cầu cụ thể | Chuẩn hóa form đầu vào trước khi support xử lý | Không auto sửa dữ liệu |
+| Người dùng được phép tự làm nhưng chưa biết thao tác | Gửi hướng dẫn | Có thể auto-reply hướng dẫn |
+| Chưa có tài liệu hướng dẫn | Bổ sung guide/SOP | Không — cần người viết docs |
+| Đã có tài liệu nhưng user vẫn tạo ticket | Kiểm tra tài liệu còn đúng; nếu đúng thì auto-reply kèm tài liệu | Có thể auto-reply kèm docs |
+| Người dùng không có quyền | Route đến người/bộ phận có quyền | Có thể auto-routing, không auto sửa payment |
+| Thao tác đúng, quyền đủ nhưng CRM vẫn lỗi | Escalate Dev kèm bước tái hiện và ảnh lỗi | Không auto-resolve |
+| Thao tác tài chính bắt buộc phải có người duyệt | Giữ xử lý thủ công | Không auto |
+
+**Kết luận automation:** chưa auto sửa payment/giao dịch vì rủi ro tài chính cao và chưa có rule duyệt rõ. Chỉ cân nhắc auto-reply guide hoặc routing.
 
 #### Lead / trạng thái — 7 ticket
 
-| Giả định | Phương án |
-| --- | --- |
-| User có quyền nhưng chưa biết đổi trạng thái | Hướng dẫn hoặc gửi guide |
-| User không có quyền | Chuyển người có quyền |
-| Dữ liệu hợp lệ nhưng CRM không cho đổi | Ghi lỗi và escalate hệ thống |
-| Đổi trạng thái ảnh hưởng quy trình kinh doanh | Không auto đổi trạng thái khi chưa có rule rõ |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| User có quyền nhưng chưa biết đổi trạng thái | Hướng dẫn hoặc gửi guide | Có thể auto-reply guide |
+| User không có quyền | Chuyển người có quyền | Có thể auto-routing |
+| Dữ liệu hợp lệ nhưng CRM không cho đổi | Ghi lỗi và escalate hệ thống | Không auto-resolve |
+| Đổi trạng thái ảnh hưởng quy trình kinh doanh | Giữ người xử lý | Không auto đổi trạng thái |
+
+**Kết luận automation:** không auto đổi trạng thái lead. Side effect nghiệp vụ cao; chỉ hỗ trợ guide/routing.
 
 #### Enroll trên CRM — 6 ticket
 
-| Giả định | Phương án |
-| --- | --- |
-| Thiếu mã enrollment/lead hoặc thông tin cần sửa | Bắt buộc field đầu vào |
-| User được phép tự sửa nhưng chưa biết cách | Hướng dẫn / gửi guide |
-| Đã có guide nhưng ticket vẫn vào | Auto-reply kèm tài liệu nếu guide còn đúng |
-| User không có quyền | Route đúng owner |
-| Quyền và dữ liệu đủ nhưng CRM vẫn lỗi | Escalate Dev |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| Thiếu mã enrollment/lead hoặc thông tin cần sửa | Bắt buộc field đầu vào | Không auto sửa dữ liệu |
+| User được phép tự sửa nhưng chưa biết cách | Hướng dẫn / gửi guide | Có thể auto-reply guide |
+| Đã có guide nhưng ticket vẫn vào | Auto-reply kèm tài liệu nếu guide còn đúng | Có thể auto-reply kèm docs |
+| User không có quyền | Route đúng owner | Có thể auto-routing |
+| Quyền và dữ liệu đủ nhưng CRM vẫn lỗi | Escalate Dev | Không auto-resolve |
+
+**Kết luận automation:** chưa auto sửa enrollment trên CRM. Chưa đủ rule nghiệp vụ; ưu tiên form + guide + routing trước.
 
 ---
 
@@ -134,25 +140,27 @@ Hai nhóm lớn nhất là Enroll 9 và Lớp/GV/học phần 7, tổng **16/26 
 
 #### Enroll trên LMS — 9 ticket
 
-| Giả định | Phương án |
-| --- | --- |
-| User thao tác chưa đúng | Gửi hướng dẫn enroll |
-| Chưa có guide enroll LMS | Bổ sung tài liệu |
-| Đã có guide nhưng user vẫn không enroll được | Auto-reply kèm guide; nếu vẫn fail thì kiểm tra dữ liệu/quyền |
-| Không tìm thấy lớp hoặc slot | Kiểm tra dữ liệu lớp trước khi kết luận lỗi hệ thống |
-| Enroll trùng | Kiểm tra học viên đã tồn tại trong lớp hay hệ thống hiển thị sai |
-| User thiếu quyền | Chuyển người có quyền |
-| Dữ liệu và quyền đúng nhưng LMS vẫn lỗi | Escalate Dev kèm ảnh lỗi và bước đã thử |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| User thao tác chưa đúng | Gửi hướng dẫn enroll | Có thể auto-reply guide |
+| Chưa có guide enroll LMS | Bổ sung tài liệu | Không — cần người viết docs |
+| Đã có guide nhưng user vẫn không enroll được | Auto-reply kèm guide; nếu vẫn fail thì kiểm tra dữ liệu/quyền | Có thể auto-reply; không auto enroll |
+| Không tìm thấy lớp hoặc slot | Kiểm tra dữ liệu lớp trước khi kết luận lỗi hệ thống | Không auto ghi dữ liệu lớp |
+| Enroll trùng | Kiểm tra học viên đã tồn tại trong lớp hay hệ thống hiển thị sai | Không auto enroll |
+| User thiếu quyền | Chuyển người có quyền | Có thể auto-routing |
+| Dữ liệu và quyền đúng nhưng LMS vẫn lỗi | Escalate Dev kèm ảnh lỗi và bước đã thử | Không auto-resolve |
 
-Chưa nên tự động enroll học viên khi chưa có đủ rule nghiệp vụ và ngoại lệ.
+**Kết luận automation:** chưa auto enroll học viên vì thiếu rule/ngoại lệ rõ và có rủi ro dữ liệu học tập. Chỉ nên auto-reply guide hoặc hỗ trợ kiểm tra thông tin.
 
 #### Lớp / giáo viên / học phần — 7 ticket
 
-| Giả định | Phương án |
-| --- | --- |
-| User được phép tự chỉnh nhưng chưa biết cách | Hướng dẫn / gửi guide |
-| User không có quyền chỉnh lớp/GV | Route đúng owner |
-| Chức năng đang lỗi | Ghi thao tác, dữ liệu đầu vào, ảnh lỗi rồi escalate Dev |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| User được phép tự chỉnh nhưng chưa biết cách | Hướng dẫn / gửi guide | Có thể auto-reply guide |
+| User không có quyền chỉnh lớp/GV | Route đúng owner | Có thể auto-routing |
+| Chức năng đang lỗi | Ghi thao tác, dữ liệu đầu vào, ảnh lỗi rồi escalate Dev | Không auto sửa lớp/GV |
+
+**Kết luận automation:** không auto sửa dữ liệu lớp/giáo viên/học phần. Ưu tiên guide, routing và escalate khi đủ bằng chứng lỗi.
 
 ---
 
@@ -169,27 +177,29 @@ Có **18/20 ticket TMS (~90%)** nằm ở chấm công hoặc lỗi hệ thống
 
 #### Chấm công / bảng công — 12 ticket
 
-| Giả định | Phương án |
-| --- | --- |
-| Ticket thiếu cơ sở, thời điểm, ca hoặc số người bị ảnh hưởng | Chuẩn hóa field đầu vào |
-| Chỉ một người bị sai công | Kiểm tra lịch/dữ liệu của cá nhân đó |
-| Nhiều người cùng ca hoặc cùng cơ sở | Kiểm tra dữ liệu/cấu hình chung, không xử lý từng người rời rạc |
-| Nhiều cơ sở cùng thời điểm | Kiểm tra incident hệ thống |
-| User chỉ chưa biết xem/duyệt công | Gửi guide nếu có quyền tự làm |
-| Đã có guide nhưng vẫn hỏi | Auto-reply kèm tài liệu nếu guide còn đúng |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| Ticket thiếu cơ sở, thời điểm, ca hoặc số người bị ảnh hưởng | Chuẩn hóa field đầu vào | Không auto sửa công |
+| Chỉ một người bị sai công | Kiểm tra lịch/dữ liệu của cá nhân đó | Không auto sửa công |
+| Nhiều người cùng ca hoặc cùng cơ sở | Kiểm tra dữ liệu/cấu hình chung | Không auto; hỗ trợ gom pattern |
+| Nhiều cơ sở cùng thời điểm | Kiểm tra incident hệ thống | Không auto-resolve |
+| User chỉ chưa biết xem/duyệt công | Gửi guide nếu có quyền tự làm | Có thể auto-reply guide |
+| Đã có guide nhưng vẫn hỏi | Auto-reply kèm tài liệu nếu guide còn đúng | Có thể auto-reply kèm docs |
 
-Không để tool tự sửa bảng công.
+**Kết luận automation:** không auto sửa bảng công vì ảnh hưởng dữ liệu công/lương. Chỉ cân nhắc auto-reply guide hoặc gợi ý ticket cùng pattern để support xác nhận.
 
 #### Lỗi hệ thống — 6 ticket
 
 Ticket **233** và **234** cùng liên quan Tỉnh Nam 2, triệu chứng tương tự và cùng nhắc lỗi từ ngày 31.
 
-| Giả định | Phương án |
-| --- | --- |
-| Chỉ một người gặp | Kiểm tra tài khoản/dữ liệu cá nhân |
-| Nhiều người cùng cơ sở | Kiểm tra cấu hình/dữ liệu chung của cơ sở |
-| Nhiều cơ sở cùng thời điểm | Điều tra theo incident hệ thống |
-| Nhiều ticket trùng thời gian, khu vực, triệu chứng | Gợi ý gom ticket liên quan để support xác nhận |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| Chỉ một người gặp | Kiểm tra tài khoản/dữ liệu cá nhân | Không auto-resolve |
+| Nhiều người cùng cơ sở | Kiểm tra cấu hình/dữ liệu chung của cơ sở | Không auto; escalate theo phạm vi |
+| Nhiều cơ sở cùng thời điểm | Điều tra theo incident hệ thống | Không auto-resolve |
+| Nhiều ticket trùng thời gian, khu vực, triệu chứng | Gợi ý gom ticket liên quan để support xác nhận | Có thể auto-gợi ý liên kết ticket |
+
+**Kết luận automation:** không auto sửa lỗi hệ thống. Có thể hỗ trợ phát hiện/gom ticket cùng pattern rồi escalate.
 
 ---
 
@@ -228,18 +238,20 @@ Hai nhóm cùng tên nhưng cần form và SOP riêng. LMS thiên về thêm h�
 
 Dữ liệu sample cho thấy có pattern login/account, nhưng chưa đủ để khẳng định mọi ticket đều cùng một root cause. Vì vậy automation chỉ chạy theo từng giả định đủ điều kiện.
 
-| Giả định | Phương án |
-| --- | --- |
-| Ticket không phải login issue | `SKIP`, không xử lý |
-| Thiếu email/định danh của account cần kiểm tra | Không đoán user; hỏi bổ sung hoặc `NEED_REVIEW` |
-| Chưa có tài liệu hướng dẫn reset/login | Bổ sung guide/SOP trước |
-| Đã có tài liệu nhưng user vẫn không đăng nhập được | Automation reply kèm tài liệu hướng dẫn |
-| HR active + LMS deactivated | `AUTO_RESOLVE`: reactivate, ghi note, phản hồi |
-| HR inactive | Không bật lại LMS; `NEED_REVIEW` |
-| LMS active nhưng user quên mật khẩu | Gửi hướng dẫn reset nếu có template |
-| Không tìm thấy LMS account | Không tự tạo account; `NEED_REVIEW` |
-| Nhiều người cùng lúc không login được cùng hệ thống | Không xử lý như quên pass riêng lẻ; kiểm tra incident |
-| Nghi lỗi hệ thống / ngoài phạm vi tool | Escalate support/Dev |
+| Giả định | Phương án | Auto? |
+| --- | --- | --- |
+| Ticket không phải login issue | `SKIP`, không xử lý | Không |
+| Thiếu email/định danh của account cần kiểm tra | Không đoán user; hỏi bổ sung hoặc `NEED_REVIEW` | Không side effect; có thể hỏi bổ sung |
+| Chưa có tài liệu hướng dẫn reset/login | Bổ sung guide/SOP trước | Không — cần người viết docs |
+| Đã có tài liệu nhưng user vẫn không đăng nhập được | Automation reply kèm tài liệu hướng dẫn | Có — auto-reply kèm docs |
+| HR active + LMS deactivated | Reactivate, ghi note, phản hồi | Có — `AUTO_RESOLVE` |
+| HR inactive | Không bật lại LMS; `NEED_REVIEW` | Không |
+| LMS active nhưng user quên mật khẩu | Gửi hướng dẫn reset nếu có template | Có thể auto-reply guide |
+| Không tìm thấy LMS account | Không tự tạo account; `NEED_REVIEW` | Không |
+| Nhiều người cùng lúc không login được cùng hệ thống | Không xử lý như quên pass riêng lẻ; kiểm tra incident | Không auto-resolve hàng loạt |
+| Nghi lỗi hệ thống / ngoài phạm vi tool | Escalate support/Dev | Không |
+
+**Kết luận automation:** Login là nhóm nên thử auto trước vì có nhánh điều kiện rõ và side effect kiểm soát được. Chỉ auto ở nhánh đủ điều kiện; thiếu docs thì bổ sung trước; đã có docs mà vẫn fail thì reply kèm tài liệu; rủi ro hoặc thiếu dữ liệu thì `NEED_REVIEW`/`SKIP`.
 
 ### Workflow tương ứng
 
