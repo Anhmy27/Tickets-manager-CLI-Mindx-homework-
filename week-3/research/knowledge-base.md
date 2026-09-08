@@ -1,363 +1,119 @@
-# Knowledge Base
+# Tuần 3 — Research: Knowledge Base
+
+Tài liệu research về Knowledge Base, gắn với nhóm lệnh `kb` trong bài tuần 3 (`ticket-manager-cli` + `kb-api-client` + `kb-api-server`).
 
 ---
 
-## 1. Knowledge Base là gì?
+## 1. Vai trò của KB trong xử lý ticket
 
-Knowledge Base (KB) có thể hiểu đơn giản là **một kho kiến thức chung của team hoặc công ty**.
+Support nhận ticket mỗi ngày. Có những ticket gần như lặp lại: không login được, quên mật khẩu, hỏi cách làm một thao tác trên hệ thống…
 
-Trong quá trình làm việc, có rất nhiều thông tin cần được sử dụng lại nhiều lần, ví dụ:
+Nếu mỗi lần đều phải tự nhớ cách xử lý, hỏi người khác, hoặc viết lại câu trả lời từ đầu thì tốn thời gian và dễ mỗi người làm một kiểu.
 
-* Hướng dẫn xử lý khi người dùng không đăng nhập được
-* Câu trả lời cho những câu hỏi thường gặp
-* Mẫu email gửi khách hàng
-* Quy trình xử lý sự cố
-* Hướng dẫn cho nhân viên mới
-* Tài liệu và thông tin nội bộ của team
+KB xuất hiện để giải bài toán đó: **gom kiến thức xử lý sẵn có vào một chỗ**, để lần sau gặp ticket giống thì tìm ra và dùng lại.
 
-Thay vì những kiến thức này nằm rải rác trong tin nhắn, email hoặc chỉ có một vài người biết, chúng được tập trung vào Knowledge Base để mọi người có thể tìm và sử dụng lại khi cần.
+| Thành phần | Vai trò |
+| --- | --- |
+| Ticket | Việc đang cần xử lý *bây giờ* |
+| KB | Tài liệu / hướng dẫn / template đã có để *giúp xử lý* |
 
-Ví dụ:
-
-Khách hàng báo **không đăng nhập được LMS**.
-
-Nếu công ty đã có một bài trong KB tên là **“Hướng dẫn xử lý lỗi đăng nhập LMS”**, nhân viên support có thể tìm bài đó và làm theo thay vì phải tự nghĩ lại cách xử lý hoặc đi hỏi người khác.
-
-### KB khác Ticket như thế nào?
-
-Có thể hiểu rất đơn giản:
-
-**Ticket = vấn đề đang xảy ra.**
-
-**Knowledge Base = kiến thức đã có để giúp xử lý vấn đề.**
-
-Ví dụ:
-
-> Ticket: Khách hàng A không đăng nhập được LMS.
-
-Trong KB có thể có:
-
-> Hướng dẫn xử lý khi người dùng không đăng nhập được LMS.
-
-Nhân viên nhận ticket → tìm KB → đọc hướng dẫn → xử lý ticket.
-
-Vì vậy KB giúp team:
-
-* Không phải giải quyết lại một vấn đề từ đầu nhiều lần
-* Có cách xử lý thống nhất
-* Người mới cũng có thể tìm tài liệu để làm theo
-* Giảm việc phải hỏi những người có kinh nghiệm
+KB không thay ticket. KB hỗ trợ người cầm ticket làm nhanh và thống nhất hơn.
 
 ---
 
-## 2. Kiến thức trong KB được tổ chức như thế nào?
+## 2. Cách tổ chức tài liệu trong KB
 
-KB không nên là một nơi chứa hàng nghìn tài liệu lộn xộn.
+Không phải cứ có nhiều file là thành KB tốt.
 
-Các tài liệu cần được **sắp xếp và phân loại** để sau này dễ tìm.
+Một tài liệu trong KB thường cần đủ thông tin để tìm và đọc:
 
-Một tài liệu trong KB thường có:
+- định danh và tên bài (`id`, `title`)
+- nội dung (`content`)
+- vị trí trên cây thư mục (`nodePath`)
+- nhãn chủ đề (`tags`)
 
-* **ID** — mã riêng của tài liệu
-* **Title** — tên tài liệu
-* **Content** — nội dung
-* **Node / vị trí** — tài liệu thuộc nhóm nào
-* **Tags** — các nhãn liên quan đến tài liệu
+Cây thư mục giúp browse theo nhóm. Search giúp khi không nhớ tài liệu nằm đâu.
 
-Ví dụ một tài liệu:
-
-**Title:** Hướng dẫn hoàn tiền cho khách hàng  
-**Node:** `/templates/email`  
-**Tags:** `refund`, `email`, `support`
-
-KB có thể được tổ chức giống một cái cây:
-
-```text
-Knowledge Base
-│
-├── Templates
-│   └── Email
-│       ├── Email xin lỗi khách hàng
-│       └── Email xác nhận hoàn tiền
-│
-├── Support
-│   ├── Lỗi đăng nhập LMS
-│   └── Hướng dẫn reset mật khẩu
-│
-└── Team
-    ├── DevOps
-    └── Support
-```
-
-Nhờ vậy, người dùng có thể **đi vào đúng nhóm để xem tài liệu**, hoặc **search khi không biết tài liệu nằm ở đâu**.
+Trong bài tuần 3, `nodePath` kiểu `/templates/email` chính là mục chứa tài liệu. Server lưu xuống folder tương ứng trong `data/`. CLI `add --file` chỉ gửi nội dung lên server, không gửi đường dẫn trên máy người dùng.
 
 ---
 
-## 3. Các chức năng chính của KB
+## 3. Các thao tác chính của KB
 
-Trong bài tuần 3, KB có 4 chức năng chính:
+Bốn lệnh `kb` có thể hiểu theo nhu cầu sử dụng:
 
-### Search – Tìm tài liệu
+| Nhu cầu | Lệnh | Ý nghĩa |
+| --- | --- | --- |
+| Biết vấn đề nhưng chưa biết bài nào | `search` | Trả về các tài liệu liên quan |
+| Đã biết muốn mở mục nào | `list` | Xem danh sách trong mục đó |
+| Đã có đúng ID, muốn đọc full | `retrieve` | Mở đúng một tài liệu |
+| Có quy trình / guide mới cần lưu | `add` | Thêm kiến thức mới vào KB |
 
-Dùng khi mình biết vấn đề cần tìm nhưng **không biết chính xác tài liệu nào**.
+`topK` dùng để giới hạn số kết quả trả về.
 
-Ví dụ:
-
-```text
-Search: "không đăng nhập được LMS"
-```
-
-KB sẽ tìm những tài liệu có liên quan và trả kết quả về.
-
-Có thể giới hạn số lượng kết quả, ví dụ `topK = 5` nghĩa là chỉ lấy tối đa 5 tài liệu phù hợp nhất.
+Mock mode và HTTP mode đều thực hiện cùng 4 thao tác này. Khác nhau chủ yếu ở chỗ dữ liệu nằm trong process giả hay nằm trên server thật.
 
 ---
 
-### List – Xem tài liệu trong một nhóm
+## 4. Các kiểu search trong KB
 
-Dùng khi mình đã biết muốn xem nhóm nào.
+Có chức năng search chưa đồng nghĩa search đã tốt. Điểm quan trọng là hệ thống quyết định “liên quan” theo tiêu chí nào.
 
-Ví dụ:
+**Keyword / text search**  
+Tài liệu có chữ gần giống query thì được trả về.  
+Ví dụ search `hoàn tiền` khớp bài “Hướng dẫn hoàn tiền…”.  
+Nhưng search `khách muốn lấy lại tiền` có thể không ra, dù người đọc hiểu là cùng ý.
 
-```text
-/templates/email
-```
+Trong `kb-api-server` tuần 3, search đang làm theo hướng này: chuẩn hóa chữ thường rồi `includes` trên title + content + nodePath. Cách này đủ cho homework, dễ test và dễ giải thích.
 
-KB có thể trả về:
+**Semantic search**  
+Không đòi wording giống nhau. Câu hỏi tự nhiên vẫn có thể khớp tài liệu cùng chủ đề. Thường dùng embedding/vector để so mức gần nghĩa.
 
-```text
-Email xin lỗi khách hàng
-Email xác nhận hoàn tiền
-Email thông báo bảo trì
-```
+**Hybrid search**  
+Keyword mạnh với mã lỗi hoặc tên feature. Semantic mạnh với câu hỏi diễn đạt tự do. Nhiều KB thực tế kết hợp cả hai.
 
-Có thể hiểu `list` giống như **mở một mục và xem bên trong có những tài liệu gì**.
-
----
-
-### Retrieve – Lấy một tài liệu cụ thể
-
-Sau khi đã tìm được tài liệu mình muốn, `retrieve` dùng để lấy **đầy đủ nội dung của đúng tài liệu đó**.
-
-Ví dụ:
-
-```text
-ID: DOC_001
-```
-
-KB trả về:
-
-```text
-Title: Hướng dẫn reset mật khẩu LMS
-
-Content:
-Bước 1...
-Bước 2...
-Bước 3...
-```
-
-Nói đơn giản:
-
-**Search giúp tìm bài → Retrieve giúp mở đúng bài đó ra đọc.**
+Điều cần nắm: **cách match quyết định người dùng có tìm ra đúng guide hay không**, nhất là khi câu hỏi không trùng title tài liệu.
 
 ---
 
-### Add – Thêm kiến thức mới
+## 5. Luồng search trong hệ thống tuần 3
 
-KB không phải kho cố định mãi mãi.
+```text
+Người dùng gõ lệnh
+  → CLI nhận query
+  → client (mock / HTTP)
+  → phía KB tìm trong kho
+  → trả tài liệu về
+```
 
-Khi team có thêm một quy trình hoặc kiến thức mới, tài liệu đó cần được thêm vào KB.
+CLI không cần biết bên trong match bằng chữ hay bằng vector. CLI chỉ gửi yêu cầu tìm kiếm.  
+Phía KB mới quyết định cách tìm và tài liệu nào được trả về.
 
-Ví dụ team vừa có quy trình mới:
-
-> Cách xử lý khi tài khoản LMS bị khóa.
-
-Có thể dùng `add` để đưa tài liệu đó vào KB, đặt đúng nhóm và thêm các tag liên quan để sau này mọi người tìm được.
+- Mock: giữ một số document giả rồi tự lọc
+- HTTP: `kb-api-client` gọi `kb-api-server`
 
 ---
 
-## 4. Search trong KB hoạt động như thế nào?
+## 6. Yêu cầu đối với một KB sử dụng được
 
-Có chức năng Search chưa có nghĩa là mọi KB tìm kiếm giống nhau.
+Search chỉ là một phần. Nếu title mơ hồ, nội dung cũ, tài liệu trùng, hoặc không cập nhật khi quy trình đổi thì search tốt vẫn khó dùng.
 
-Điểm khác nhau quan trọng là:
+Chuỗi cần có:
 
-> **KB dựa vào đâu để biết tài liệu nào liên quan đến câu người dùng đang tìm?**
+**có kiến thức đúng → xếp đúng chỗ → tìm được → đọc được → cập nhật khi thay đổi**
 
-Có một số cách phổ biến.
+Sang tuần 5, khi phân tích ticket login, các giả định cũng đi theo hướng này:
 
-### Keyword Search – tìm theo từ
+- thiếu tài liệu hướng dẫn → bổ sung docs vào KB trước
+- đã có docs mà user vẫn không được → automation reply kèm tài liệu
+- case deactivate / inactive → nhánh xử lý account, không chỉ gửi guide
 
-Đây là cách đơn giản nhất.
-
-Ví dụ KB có tài liệu:
-
-> **Hướng dẫn hoàn tiền cho khách hàng**
-
-Người dùng search:
-
-```text
-hoàn tiền
-```
-
-KB thấy tài liệu có chữ **“hoàn tiền”** nên trả tài liệu đó về.
-
-Vấn đề xảy ra khi người dùng search:
-
-```text
-khách muốn lấy lại tiền
-```
-
-Con người hiểu:
-
-> “lấy lại tiền” và “hoàn tiền” gần như đang nói cùng một việc.
-
-Nhưng Keyword Search đơn giản chỉ nhìn vào **từ được viết trong tài liệu**. Nếu không có từ giống nhau, nó có thể không tìm thấy.
-
-Trong KB tuần 3 hiện tại, phần search đang sử dụng cách **tìm theo từ như vậy**.
+KB không đứng riêng. Nó nằm trong vòng: ticket lặp → chuẩn hóa kiến thức → (nếu đủ điều kiện) mới automation.
 
 ---
 
-### Semantic Search – tìm theo ý nghĩa
+## 7. Kết luận
 
-Semantic Search giải quyết hạn chế trên.
+Knowledge Base là kho kiến thức được tổ chức để mọi người hoặc hệ thống khác có thể tìm, đọc và sử dụng lại khi cần. Nội dung phải đủ rõ để người khác làm theo được.
 
-Thay vì chỉ xem:
-
-> “Có cùng chữ không?”
-
-nó cố gắng tìm:
-
-> “Có đang nói về cùng một vấn đề không?”
-
-Ví dụ tài liệu là:
-
-```text
-Hướng dẫn hoàn tiền cho khách hàng
-```
-
-Người dùng hỏi:
-
-```text
-Khách muốn lấy lại tiền thì xử lý thế nào?
-```
-
-Mặc dù câu hỏi không viết giống tiêu đề tài liệu, Semantic Search vẫn có thể nhận ra hai nội dung có ý nghĩa gần nhau và đưa tài liệu đó lên.
-
-Bên trong hệ thống, nội dung tài liệu và câu hỏi sẽ được chuyển thành dạng số để máy có thể so sánh xem chúng gần nhau về ý nghĩa đến mức nào.
-
-Phần này thường được gọi là **embedding/vector**.
-
-Không cần hiểu vector là “máy thực sự hiểu tiếng người”. Chỉ cần hiểu ở mức:
-
-> **Hệ thống biến nội dung thành dạng mà máy có thể so sánh mức độ giống nhau về ý nghĩa.**
-
----
-
-### Hybrid Search – kết hợp cả hai
-
-Keyword Search có lợi thế khi người dùng biết chính xác từ cần tìm.
-
-Ví dụ:
-
-```text
-LMS_ERROR_001
-```
-
-Nếu đây là mã lỗi, tìm đúng chữ này rất hiệu quả.
-
-Semantic Search lại hữu ích khi người dùng diễn đạt vấn đề bằng ngôn ngữ tự nhiên.
-
-Ví dụ:
-
-```text
-Học viên bảo không vào được trang học
-```
-
-có thể liên quan đến:
-
-```text
-Hướng dẫn xử lý lỗi đăng nhập LMS
-```
-
-Vì vậy một số hệ thống KB kết hợp cả hai:
-
-```text
-Keyword Search
-      +
-Semantic Search
-      ↓
-Hybrid Search
-```
-
-Tức là vừa tìm những tài liệu **trùng từ**, vừa tìm những tài liệu **gần về ý nghĩa**.
-
----
-
-## 5. Ai thực hiện việc Search?
-
-Trong hệ thống của tuần 3 có thể hình dung:
-
-```text
-Người dùng
-    ↓
-   CLI
-    ↓
-Knowledge Base
-    ↓
-Tìm tài liệu
-    ↓
-Trả kết quả
-```
-
-Ví dụ người dùng nhập:
-
-```text
-kb search "refund"
-```
-
-CLI nhận câu `"refund"` và gửi yêu cầu sang KB.
-
-KB mới là phía tìm trong kho tài liệu và trả kết quả lại.
-
-Vì vậy CLI không cần biết bên trong KB đang dùng Keyword Search, Semantic Search hay kết hợp cả hai.
-
-CLI chỉ cần:
-
-> “Tôi muốn tìm tài liệu liên quan đến câu này.”
-
-KB chịu trách nhiệm:
-
-> “Tôi sẽ tìm bằng cách nào và trả tài liệu nào cho anh.”
-
-Trong project hiện tại, khi chạy bằng Mock thì chưa có KB server thật nên `MockKBClient` tự giữ một số tài liệu giả và tự tìm trong đó. Khi dùng HTTP client, CLI gửi yêu cầu sang KB server.
-
----
-
-## 6. Một KB tốt không chỉ cần Search tốt
-
-Search rất quan trọng, nhưng KB vẫn cần **nội dung được tổ chức tốt**.
-
-Ví dụ nếu có 500 tài liệu nhưng:
-
-* Tên tài liệu không rõ ràng
-* Nội dung đã cũ
-* Tài liệu bị trùng nhau
-* Không biết tài liệu thuộc nhóm nào
-* Không được cập nhật khi quy trình thay đổi
-
-thì dù Search tốt, người dùng vẫn khó sử dụng KB.
-
-Vì vậy một KB tốt cần:
-
-**Có kiến thức hữu ích → được sắp xếp rõ ràng → dễ tìm → dễ đọc → được cập nhật khi kiến thức thay đổi.**
-
-Search chỉ là một phần giúp người dùng tìm được kiến thức đó.
-
----
-
-## 7. Tóm tắt
-
-Có thể hiểu Knowledge Base bằng một câu:
-
-> **Knowledge Base là một kho kiến thức được tổ chức để mọi người hoặc các hệ thống khác có thể dễ dàng tìm, đọc và sử dụng lại kiến thức khi cần.**
+Trong homework tuần 3 đã có đường ống tối thiểu: thêm bài, xem theo nhóm, tìm theo chữ, mở đúng bài. Keyword search đủ để demo. Semantic/hybrid là hướng mở rộng khi KB dùng thật với câu hỏi diễn đạt tự nhiên, không trùng 100% chữ trong tài liệu.
