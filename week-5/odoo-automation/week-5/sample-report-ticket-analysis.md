@@ -144,11 +144,11 @@ Nhóm này gồm các ticket như:
 
 ---
 
-## 5. Vì sao không chọn nhóm nhiều ticket nhất?
+## 5. Đánh giá ưu tiên automation
 
-Nếu chỉ nhìn volume, CRM / Enrollment mới là nhóm lớn nhất. Nhưng bài Week 5 không yêu cầu chọn nhóm nhiều nhất bằng mọi giá. Bài yêu cầu chọn một vấn đề lặp lại và triển khai automation theo hướng Operating Engineer.
+Việc chọn automation candidate không nên chỉ dựa trên volume. Một pattern phù hợp để tự động hóa cần có quy trình xử lý lặp lại, điều kiện nhận diện rõ và rủi ro side effect thấp hoặc kiểm soát được.
 
-So sánh nhanh:
+Trong sample, CRM / Enrollment là nhóm có nhiều ticket nhất. Tuy nhiên nhóm này quá rộng và có thể liên quan đến dữ liệu nghiệp vụ như lead, payment, order hoặc enrollment. Vì vậy report cần so sánh các pattern theo nhiều tiêu chí trước khi chọn automation.
 
 | Tiêu chí | CRM / Enrollment | LMS / Vận hành lớp | TMS / Bug | Login / Account |
 | --- | --- | --- | --- | --- |
@@ -158,7 +158,7 @@ So sánh nhanh:
 | Có thể đặt guardrail | Khó | Trung bình | Khó | Rõ hơn |
 | Phù hợp Scenario 1 | Không | Một phần | Không | Có |
 
-Kết luận: **Login / Account không phải nhóm lớn nhất, nhưng là nhóm phù hợp nhất để làm automation demo trong Week 5** vì workflow có thể giới hạn, dễ kiểm tra điều kiện và ít side effect hơn so với payment/enroll/TMS.
+Từ góc nhìn Operating Engineer, **Login / Account là nhóm phù hợp nhất để làm automation demo trong Week 5** vì workflow có thể giới hạn, dễ kiểm tra điều kiện và ít side effect hơn so với payment/enroll/TMS.
 
 ---
 
