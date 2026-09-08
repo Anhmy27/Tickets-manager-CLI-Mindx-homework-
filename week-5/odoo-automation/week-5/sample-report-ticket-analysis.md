@@ -7,12 +7,12 @@
 
 ## 1. Mục tiêu
 
-Báo cáo dùng dữ liệu sample để trả lời bốn câu hỏi:
+Báo cáo dùng dữ liệu sample để:
 
-- Ticket đang tập trung ở đâu?
-- Trong các khu vực đó, người dùng đang gặp loại vấn đề nào?
-- Support có thể đang xử lý theo kiểu nào: hướng dẫn, xin quyền, điều tra lỗi, chuyển bộ phận hay thao tác lặp lại?
-- Với từng nhóm, hướng cải thiện nào hợp lý và cần đo thêm gì trước khi mở rộng automation?
+- Nhận diện ticket đang tập trung ở đâu và theo nhóm vấn đề nào.
+- Đưa ra **giả định** cho từng nhóm khi dữ liệu chưa đủ xác nhận root cause.
+- Với mỗi giả định, nêu **phương án** xử lý tương ứng.
+- Chọn nhóm phù hợp để thử automation theo hướng Operating Engineer và xác định cần đo gì tiếp theo.
 
 ---
 
@@ -20,7 +20,7 @@ Báo cáo dùng dữ liệu sample để trả lời bốn câu hỏi:
 
 Report dùng file `docs/plans/week-5/data/sample.xlsx`. Sau khi gom theo mã ticket và phân loại bằng `Subject + Tags`, dataset có **131 ticket**.
 
-Dữ liệu hiện tại chủ yếu cho biết nội dung ticket. Chưa có log xử lý chi tiết, thời gian phản hồi, số người bị ảnh hưởng hay nguyên nhân cuối cùng. Vì vậy report phân biệt rõ quan sát từ data và các trường hợp cần kiểm tra thêm.
+File hiện chủ yếu có Subject/Tags, chưa có log xử lý, thời gian phản hồi hay nguyên nhân cuối cùng. Vì vậy các nhánh dưới đây là **giả định vận hành** để định hướng xử lý, không phải root cause đã xác nhận.
 
 ---
 
@@ -41,9 +41,9 @@ pie title Ticket theo hệ thống — 131 ticket
   "Nội bộ" : 2
 ```
 
-CRM, LMS và TMS có tổng cộng **83/131 ticket**, chiếm **63,4%** toàn bộ dữ liệu.
+CRM, LMS và TMS có tổng cộng **83/131 ticket (~63,4%)**.
 
-Số ticket cao chưa đồng nghĩa hệ thống đó có tỷ lệ lỗi cao. File không có số người dùng theo hệ thống, nên chưa thể tính ticket trên mỗi user. Một hệ thống có nhiều ticket có thể do lượng người dùng lớn, nghiệp vụ phức tạp, quyền hạn khó xử lý, người dùng chưa biết thao tác hoặc hệ thống thực sự lỗi.
+Số ticket cao chưa đồng nghĩa hệ thống có tỷ lệ lỗi cao. File không có số người dùng theo hệ thống, nên chưa tính được ticket trên mỗi user.
 
 Các nhóm việc nổi bật:
 
@@ -59,7 +59,7 @@ pie title Các nhóm việc nổi bật
   "Hợp đồng" : 7
 ```
 
-Enroll có 15 ticket (LMS 9, CRM 6). Thanh toán có 13 ticket và toàn bộ nằm trên CRM. Không đăng nhập và chấm công mỗi nhóm 12 ticket.
+Enroll có 15 ticket (LMS 9, CRM 6). Thanh toán có 13 ticket, toàn bộ trên CRM. Không đăng nhập và chấm công mỗi nhóm 12 ticket.
 
 ---
 
@@ -83,24 +83,36 @@ Ba nhóm lớn nhất là Thanh toán 13, Lead/trạng thái 7 và Enroll 6, t�
 
 #### Thanh toán — 13 ticket
 
-Nhóm này gồm nhiều loại yêu cầu: tạo QR, add/gỡ payment, hủy hoặc confirm giao dịch, cập nhật trạng thái đóng tiền, hóa đơn và mã giảm giá.
+Nhóm gồm tạo QR, add/gỡ payment, hủy hoặc confirm giao dịch, cập nhật trạng thái đóng tiền, hóa đơn và mã giảm giá. Volume cao nhưng chưa chứng minh cùng một lỗi lặp 13 lần.
 
-13 ticket Payment cho thấy đây là nghiệp vụ tạo nhiều yêu cầu support, nhưng chưa chứng minh CRM đang lặp lại cùng một lỗi 13 lần. Các trường hợp có thể gặp:
-
-- Người dùng chưa biết thao tác.
-- Không có quyền.
-- Dữ liệu hoặc CRM lỗi.
-- Nghiệp vụ bắt buộc phải có người kiểm soát.
-
-**Hướng xử lý:** chuẩn hóa form với mã lead/enrollment, loại yêu cầu, số tiền nếu có và kết quả mong muốn. Có guide thì gửi hướng dẫn; thiếu quyền thì route đúng owner; chỉ khi thao tác và quyền đều đúng mà hệ thống vẫn lỗi mới escalate Dev. Chưa nên để workflow tự sửa payment.
+| Giả định | Phương án |
+| --- | --- |
+| Ticket thiếu mã lead/enrollment, số tiền hoặc yêu cầu cụ thể | Chuẩn hóa form đầu vào trước khi support xử lý |
+| Người dùng được phép tự làm nhưng chưa biết thao tác | Gửi hướng dẫn |
+| Chưa có tài liệu hướng dẫn | Bổ sung guide/SOP |
+| Đã có tài liệu nhưng user vẫn tạo ticket | Kiểm tra tài liệu có dễ tìm và còn đúng không; nếu đúng thì auto-reply kèm tài liệu |
+| Người dùng không có quyền | Route đến người/bộ phận có quyền |
+| Thao tác đúng, quyền đủ nhưng CRM vẫn lỗi | Escalate Dev kèm bước tái hiện và ảnh lỗi |
+| Thao tác tài chính bắt buộc phải có người duyệt | Giữ xử lý thủ công, không auto sửa dữ liệu payment |
 
 #### Lead / trạng thái — 7 ticket
 
-Cần phân biệt yêu cầu đổi trạng thái, dữ liệu lead sai, không thao tác được, lỗi khi xử lý lead hoặc cần người có quyền cao hơn. Form nên có mã lead, trạng thái hiện tại, trạng thái muốn chuyển và lý do. Chưa nên tự động đổi trạng thái lead vì có thể ảnh hưởng quy trình kinh doanh.
+| Giả định | Phương án |
+| --- | --- |
+| User có quyền nhưng chưa biết đổi trạng thái | Hướng dẫn hoặc gửi guide |
+| User không có quyền | Chuyển người có quyền |
+| Dữ liệu hợp lệ nhưng CRM không cho đổi | Ghi lỗi và escalate hệ thống |
+| Đổi trạng thái ảnh hưởng quy trình kinh doanh | Không auto đổi trạng thái khi chưa có rule rõ |
 
 #### Enroll trên CRM — 6 ticket
 
-Chủ yếu liên quan enrollment hoặc chỉnh sửa thông tin trên enrollment. Dù cùng gọi là Enroll, nhóm này không nên gộp cách xử lý với LMS vì CRM và LMS phục vụ mục đích khác nhau. Ticket cần mã enrollment/lead, thông tin đang có, thông tin muốn sửa và lý do.
+| Giả định | Phương án |
+| --- | --- |
+| Thiếu mã enrollment/lead hoặc thông tin cần sửa | Bắt buộc field đầu vào |
+| User được phép tự sửa nhưng chưa biết cách | Hướng dẫn / gửi guide |
+| Đã có guide nhưng ticket vẫn vào | Auto-reply kèm tài liệu nếu guide còn đúng |
+| User không có quyền | Route đúng owner |
+| Quyền và dữ liệu đủ nhưng CRM vẫn lỗi | Escalate Dev |
 
 ---
 
@@ -122,13 +134,25 @@ Hai nhóm lớn nhất là Enroll 9 và Lớp/GV/học phần 7, tổng **16/26 
 
 #### Enroll trên LMS — 9 ticket
 
-Các tình huống gồm thêm học viên, không tìm thấy lớp hoặc slot, enroll trùng và lỗi trong quá trình enroll. Cùng Subject “không enroll được” có thể do thao tác sai, dữ liệu thiếu/sai, thiếu quyền hoặc LMS lỗi.
+| Giả định | Phương án |
+| --- | --- |
+| User thao tác chưa đúng | Gửi hướng dẫn enroll |
+| Chưa có guide enroll LMS | Bổ sung tài liệu |
+| Đã có guide nhưng user vẫn không enroll được | Auto-reply kèm guide; nếu vẫn fail thì kiểm tra dữ liệu/quyền |
+| Không tìm thấy lớp hoặc slot | Kiểm tra dữ liệu lớp trước khi kết luận lỗi hệ thống |
+| Enroll trùng | Kiểm tra học viên đã tồn tại trong lớp hay hệ thống hiển thị sai |
+| User thiếu quyền | Chuyển người có quyền |
+| Dữ liệu và quyền đúng nhưng LMS vẫn lỗi | Escalate Dev kèm ảnh lỗi và bước đã thử |
 
-**Hướng xử lý:** ticket nên có mã lớp, thông tin học viên, slot nếu liên quan, thao tác đã thử và thông báo lỗi. Có thể dùng guide nếu người dùng chưa biết thao tác; kiểm tra dữ liệu lớp/slot trước khi kết luận lỗi hệ thống; thiếu quyền thì chuyển owner. Chưa nên tự động enroll học viên.
+Chưa nên tự động enroll học viên khi chưa có đủ rule nghiệp vụ và ngoại lệ.
 
 #### Lớp / giáo viên / học phần — 7 ticket
 
-Nhóm này gồm không thêm được giáo viên, điều chỉnh lớp hoặc lỗi học phần. Cần tách yêu cầu nhờ người có quyền chỉnh dữ liệu và trường hợp chức năng đang lỗi. Ticket nên có mã lớp/học phần, giáo viên liên quan, nội dung cần thay đổi và ảnh lỗi nếu có.
+| Giả định | Phương án |
+| --- | --- |
+| User được phép tự chỉnh nhưng chưa biết cách | Hướng dẫn / gửi guide |
+| User không có quyền chỉnh lớp/GV | Route đúng owner |
+| Chức năng đang lỗi | Ghi thao tác, dữ liệu đầu vào, ảnh lỗi rồi escalate Dev |
 
 ---
 
@@ -145,13 +169,27 @@ Có **18/20 ticket TMS (~90%)** nằm ở chấm công hoặc lỗi hệ thống
 
 #### Chấm công / bảng công — 12 ticket
 
-Triệu chứng gồm không hiển thị công, không duyệt được công, cần bù công, đi đúng ca nhưng hệ thống báo trễ và các vấn đề điểm danh/chấm công giáo viên.
+| Giả định | Phương án |
+| --- | --- |
+| Ticket thiếu cơ sở, thời điểm, ca hoặc số người bị ảnh hưởng | Chuẩn hóa field đầu vào |
+| Chỉ một người bị sai công | Kiểm tra lịch/dữ liệu của cá nhân đó |
+| Nhiều người cùng ca hoặc cùng cơ sở | Kiểm tra dữ liệu/cấu hình chung, không xử lý từng người rời rạc |
+| Nhiều cơ sở cùng thời điểm | Kiểm tra incident hệ thống |
+| User chỉ chưa biết xem/duyệt công | Gửi guide nếu có quyền tự làm |
+| Đã có guide nhưng vẫn hỏi | Auto-reply kèm tài liệu nếu guide còn đúng |
 
-Với nhóm này, phạm vi ảnh hưởng rất quan trọng: một người, một ca, một cơ sở hay nhiều cơ sở. Ticket nên có cơ sở, thời điểm, ca làm việc, người bị ảnh hưởng, số người cùng gặp, triệu chứng cụ thể và ảnh lỗi. Hệ thống có thể gợi ý các ticket trùng thời gian/khu vực/triệu chứng, nhưng support vẫn là người xác nhận. Không nên để tool tự sửa bảng công.
+Không để tool tự sửa bảng công.
 
 #### Lỗi hệ thống — 6 ticket
 
-Có 6 ticket mô tả mất dữ liệu, không hiển thị thông tin hoặc không thao tác được. Ticket **233** và **234** cùng liên quan Tỉnh Nam 2, triệu chứng tương tự và cùng nhắc lỗi từ ngày 31. Đây là dấu hiệu cần kiểm tra khả năng cùng incident, chưa đủ để khẳng định cùng root cause.
+Ticket **233** và **234** cùng liên quan Tỉnh Nam 2, triệu chứng tương tự và cùng nhắc lỗi từ ngày 31.
+
+| Giả định | Phương án |
+| --- | --- |
+| Chỉ một người gặp | Kiểm tra tài khoản/dữ liệu cá nhân |
+| Nhiều người cùng cơ sở | Kiểm tra cấu hình/dữ liệu chung của cơ sở |
+| Nhiều cơ sở cùng thời điểm | Điều tra theo incident hệ thống |
+| Nhiều ticket trùng thời gian, khu vực, triệu chứng | Gợi ý gom ticket liên quan để support xác nhận |
 
 ---
 
@@ -170,9 +208,9 @@ pie title Không đăng nhập — 12 ticket trên 7 hệ thống
   "CRM" : 1
 ```
 
-Không hệ thống nào chiếm phần lớn nhóm login. Chuỗi xử lý thường lặp lại: xác định user → kiểm tra trạng thái nhân sự → kiểm tra trạng thái tài khoản → xác định nguyên nhân → reset/mở khóa nếu đủ điều kiện → phản hồi.
+Không hệ thống nào chiếm phần lớn nhóm login. Chuỗi kiểm tra thường lặp: xác định user → kiểm tra nhân sự → kiểm tra tài khoản → xác định nguyên nhân → reset/mở khóa nếu đủ điều kiện → phản hồi.
 
-Đây là lý do Login phù hợp hơn một số nhóm có volume cao hơn để thử workflow. Workflow Week 5 không cover hết 12 phiếu trên mọi hệ thống; chỉ xử lý phần nằm trong phạm vi tool truy cập được, ưu tiên LMS theo Scenario 1.
+Đây là nhóm phù hợp để thử workflow hơn một số nhóm volume cao hơn, vì điều kiện xử lý có thể giới hạn rõ. Workflow Week 5 không cover hết mọi hệ thống; ưu tiên LMS theo Scenario 1.
 
 ### 5.2. Enroll LMS và Enroll CRM
 
@@ -182,92 +220,47 @@ pie title Enroll theo hệ thống
   "Enroll CRM" : 6
 ```
 
-Hai nhóm cùng tên nhưng cần SOP và form riêng. LMS thiên về thêm học viên/lớp/slot. CRM thiên về enrollment hoặc chỉnh thông tin trên enrollment.
+Hai nhóm cùng tên nhưng cần form và SOP riêng. LMS thiên về thêm học viên/lớp/slot. CRM thiên về enrollment hoặc chỉnh thông tin enrollment.
 
 ---
 
-## 6. Các trường hợp cần phân biệt khi điều tra
+## 6. Giả định và phương án cho Login Issue
 
-Một Subject giống nhau có thể đến từ nguyên nhân khác nhau. Với ticket chưa có log xử lý, report chỉ nêu các trường hợp cần kiểm tra, không coi chúng là root cause đã xác nhận.
+Dữ liệu sample cho thấy có pattern login/account, nhưng chưa đủ để khẳng định mọi ticket đều cùng một root cause. Vì vậy automation chỉ chạy theo từng giả định đủ điều kiện.
 
-### 6.1. Chưa biết thao tác / thiếu quyền / lỗi hệ thống
+| Giả định | Phương án |
+| --- | --- |
+| Ticket không phải login issue | `SKIP`, không xử lý |
+| Thiếu email/định danh của account cần kiểm tra | Không đoán user; hỏi bổ sung hoặc `NEED_REVIEW` |
+| Chưa có tài liệu hướng dẫn reset/login | Bổ sung guide/SOP trước |
+| Đã có tài liệu nhưng user vẫn không đăng nhập được | Automation reply kèm tài liệu hướng dẫn |
+| HR active + LMS deactivated | `AUTO_RESOLVE`: reactivate, ghi note, phản hồi |
+| HR inactive | Không bật lại LMS; `NEED_REVIEW` |
+| LMS active nhưng user quên mật khẩu | Gửi hướng dẫn reset nếu có template |
+| Không tìm thấy LMS account | Không tự tạo account; `NEED_REVIEW` |
+| Nhiều người cùng lúc không login được cùng hệ thống | Không xử lý như quên pass riêng lẻ; kiểm tra incident |
+| Nghi lỗi hệ thống / ngoài phạm vi tool | Escalate support/Dev |
 
-Với Payment, Lead, Enroll hoặc Lớp/GV, support cần tách sớm:
-
-- Người dùng được phép tự làm nhưng chưa biết cách → hướng dẫn hoặc gửi guide.
-- Người dùng không có quyền → route đúng owner.
-- Thao tác đúng, quyền đủ nhưng hệ thống vẫn lỗi → escalate Dev kèm bước tái hiện và ảnh lỗi.
-
-### 6.2. Nhiều người cùng triệu chứng
-
-Nếu nhiều ticket có triệu chứng giống nhau, có thể là các ticket độc lập, một lỗi cấu hình/dữ liệu chung, hoặc một incident hệ thống. Support cần đối chiếu hệ thống, khu vực, thời gian, triệu chứng và số người bị ảnh hưởng trước khi gom điều tra.
-
-### 6.3. Tính năng mới và yêu cầu có deadline
-
-Ticket yêu cầu tính năng mới cần tách khỏi bug. Support ghi nhận nhu cầu và người có quyền quyết định, không tự cam kết thời gian release. Với yêu cầu có deadline, cần ghi rõ thời hạn, phạm vi ảnh hưởng và người có quyền xử lý.
-
----
-
-## 7. Trạng thái và priority
-
-```mermaid
-pie title Trạng thái 131 ticket
-  "Resolved" : 91
-  "First Response Sent" : 17
-  "Cancelled" : 12
-  "New" : 6
-  "In Progress" : 5
-```
-
-Có **91/131 ticket Resolved (~69,5%)**. Con số này cho biết phần lớn ticket trong export đã được đóng, nhưng chưa phản ánh support xử lý nhanh hay chậm.
-
-```mermaid
-pie title Priority 131 ticket
-  "High" : 42
-  "Urgent" : 40
-  "Low" : 40
-  "Medium" : 9
-```
-
-High + Urgent có **82/131 ticket (~62,6%)**. Đây là tỷ lệ đáng chú ý nhưng chưa đủ để kết luận tất cả đều là sự cố nghiêm trọng. Cần biết priority được gán theo phạm vi ảnh hưởng, nghiệp vụ, deadline hay do người tạo ticket tự chọn.
-
----
-
-## 8. Workflow Login và phạm vi automation
-
-Với Scenario 1 của Week 5, workflow tập trung vào trường hợp user còn hiệu lực trên HR nhưng account LMS đang bị deactivate. Không phải mọi ticket login đều thuộc nhánh này; quên mật khẩu, thiếu account, user inactive hoặc lỗi hệ thống cần xử lý khác.
+### Workflow tương ứng
 
 ```text
 Odoo ticket mới
   -> nhận diện login issue
-  -> trích xuất email/định danh của account cần kiểm tra
-  -> kiểm tra HR status
-  -> kiểm tra LMS account status
-  -> quyết định AUTO_RESOLVE / NEED_REVIEW / SKIP
+  -> trích xuất email/định danh account cần kiểm tra
+  -> kiểm tra HR + LMS
+  -> quyết định theo giả định ở bảng trên
   -> cập nhật Odoo ticket + phản hồi
 ```
-
-| Điều kiện | Hành động | Kết quả |
-| --- | --- | --- |
-| Không phải login issue | Không xử lý | `SKIP` |
-| Thiếu email/định danh của account cần kiểm tra | Không đoán user | `SKIP` hoặc `NEED_REVIEW` |
-| HR inactive | Không bật lại LMS | `NEED_REVIEW` |
-| HR active + LMS deactivated | Reactivate, ghi note, phản hồi | `AUTO_RESOLVE` |
-| LMS active nhưng vẫn không vào được | Kiểm tra password/permission/system | `NEED_REVIEW` |
-| Không tìm thấy LMS account | Không tự tạo account | `NEED_REVIEW` |
-| Nghi lỗi hệ thống / nhiều user cùng lúc | Escalate | `NEED_REVIEW` |
 
 Nếu nguyên nhân gốc là rule deactivate sau thời gian không hoạt động, Dev/Product có thể sửa rule về lâu dài. Trong ngắn hạn, automation giúp giảm thao tác lặp mà không cần chờ sửa code trước.
 
 ---
 
-## 9. Metrics cần đo sau automation
-
-Để biết workflow Login có thực sự giúp support, cần đo:
+## 7. Metrics cần đo sau automation
 
 - Số ticket login được workflow nhận diện.
 - Tỷ lệ xử lý hoàn toàn (`AUTO_RESOLVE`).
-- Tỷ lệ vẫn cần support can thiệp (`NEED_REVIEW`).
+- Tỷ lệ vẫn cần support (`NEED_REVIEW`).
 - Tỷ lệ `SKIP` vì thiếu thông tin hoặc ngoài phạm vi.
 - Thời gian xử lý trước và sau automation.
 - Số false action hoặc xử lý sai account.
@@ -276,22 +269,10 @@ Chỉ nên kết luận mức tiết kiệm thời gian sau khi có số liệu 
 
 ---
 
-## 10. Kết luận
+## 8. Kết luận
 
-Trong 131 ticket, CRM, LMS và TMS chiếm **83 ticket (63,4%)**, nên đây là ba hệ thống cần ưu tiên theo workload. Tuy nhiên không thể dùng một giải pháp chung cho các nhóm volume cao.
+CRM, LMS và TMS chiếm **83/131 ticket (~63,4%)**, nên đây là ba hệ thống cần ưu tiên theo workload. Với các nhóm volume cao như Payment, Enroll và Chấm công, hướng trước mắt là chuẩn hóa thông tin đầu vào, guide/routing theo quyền, và chỉ escalate khi đủ bằng chứng lỗi hệ thống.
 
-**CRM** cần làm rõ Payment, Lead và Enroll theo từng kiểu xử lý: hướng dẫn, routing theo quyền hoặc điều tra lỗi. Chưa nên auto sửa dữ liệu thanh toán hay trạng thái lead.
+Login không phải nhóm lớn nhất, nhưng có chuỗi kiểm tra lặp và có thể đặt giả định–phương án rõ. Vì vậy Week 5 chọn Login LMS để thử automation có điều kiện: thiếu docs thì bổ sung; đã có docs mà vẫn fail thì reply kèm tài liệu; HR active + LMS deactivated thì auto reactivate; các case thiếu dữ liệu hoặc rủi ro thì chuyển review.
 
-**LMS** cần tách Enroll và Lớp/GV/học phần theo thao tác, dữ liệu, quyền và lỗi chức năng. Form đầu vào và guide hữu ích trước khi nghĩ tới automation ghi dữ liệu.
-
-**TMS** cần bổ sung thời gian, cơ sở và phạm vi ảnh hưởng. Các ticket trùng thời gian/khu vực/triệu chứng nên được kiểm tra khả năng cùng incident trước khi xử lý rời rạc.
-
-**Login** tiếp tục là nhóm phù hợp để thử workflow vì chuỗi kiểm tra lặp lại và điều kiện xử lý tương đối rõ. Bước tiếp theo là đo coverage, tỷ lệ xử lý hoàn toàn, tỷ lệ cần support can thiệp và thời gian xử lý thực tế.
-
-Các hướng ưu tiên từ báo cáo:
-
-1. Đo hiệu quả workflow Login đã triển khai.
-2. Chuẩn hóa field đầu vào cho Payment, Enroll, Lead và TMS.
-3. Kiểm tra guide hiện có trước khi viết thêm; dùng auto-reply khi vấn đề chủ yếu là khó tìm tài liệu.
-4. Hỗ trợ gợi ý ticket TMS có khả năng thuộc cùng incident.
-5. Chỉ mở rộng automation sang thao tác ghi/sửa dữ liệu khi đã có rule nghiệp vụ, quyền và ngoại lệ đủ rõ.
+Bước tiếp theo là đo coverage, tỷ lệ xử lý hoàn toàn, tỷ lệ cần support can thiệp và thời gian xử lý thực tế trước khi mở rộng automation sang nhóm khác.
