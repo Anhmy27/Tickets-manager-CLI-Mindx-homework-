@@ -1,221 +1,267 @@
-# Phân tích data ticket và lý do chọn tool xử lý đăng nhập
+# Báo cáo phân tích ticket và lựa chọn automation login LMS
+
+**Nguồn dữ liệu:** `Phiếu hỗ trợ (helpdesk.ticket).xlsx`  
+**Phạm vi:** Helpdesk Odoo training cho bài Week 5  
+**Tổng số sau khi gom ID:** 18 ticket không trùng lặp
 
 ---
 
-## 1. Kết luận
+## 1. Kết luận chính
 
-Em phân tích export Helpdesk Odoo: `Phiếu hỗ trợ (helpdesk.ticket).xlsx`.
+Sau khi gom các dòng export theo cột `Trình tự ID phiếu hỗ trợ`, data có **18 ticket duy nhất**. Nhóm lớn nhất là **tài khoản LMS / không đăng nhập được**, gồm **10/18 ticket, tương đương khoảng 56%**.
 
-Sau khi gom theo ticket ID, dataset có **18 ticket**. Em chia thành các nhóm theo tiêu đề + thẻ:
+Tuy nhiên, lý do chọn login để làm tool không chỉ vì số lượng nhiều. Em chọn nhóm này vì nó đồng thời thỏa 3 điều kiện:
 
-| Nhóm                                 |  Số |   % |
-| ------------------------------------ | --: | --: |
-| Tài khoản LMS / không đăng nhập được |  10 | 56% |
-| LMS chạy kém / lỗi hệ thống          |   5 | 28% |
-| Yêu cầu tính năng                    |   1 |  6% |
-| Công việc nội bộ có hạn chót         |   1 |  6% |
-| Khác (tải tài liệu)                  |   1 |  6% |
+- Có volume cao nhất trong dataset hiện tại.
+- Có quy trình support lặp lại: nhận diện ticket login, kiểm tra email, kiểm tra HR, kiểm tra trạng thái LMS, quyết định reactivate hoặc chuyển review.
+- Có thể tự động hóa trong phạm vi an toàn nếu rule rõ ràng và không tự xử lý các case thiếu dữ liệu.
 
-**Nhóm login chiếm nhiều ticket nhất (10/18 ≈ 56%).** Em chọn nhóm này để làm tool vì:
+Nhóm lỗi hệ thống LMS có ít ticket hơn (**5/18 ticket, khoảng 28%**) nhưng có thể ảnh hưởng nhiều user trong một lần xảy ra lỗi. Nhóm này quan trọng, nhưng không phù hợp để tool support tự auto-resolve vì nguyên nhân thường nằm ở hệ thống, content hoặc hạ tầng và cần Dev/Product kiểm tra.
 
-- Volume cao nhất trên data hiện tại
-- Quy trình xử lý lặp, nhiều bước check được bằng dữ liệu
-- Phù hợp để automation trong phạm vi support/ops
-
-Nhóm LMS chạy kém / lỗi hệ thống ít ticket hơn nhưng từng đợt có thể ảnh hưởng nhiều user và thường cần Dev — em không chọn auto-resolve nhóm này trước.
-
-Tool: `week-5/odoo-automation` (scan stage + webhook Odoo Helpdesk).
+Kết luận: **tool Week 5 nên tập trung vào login LMS trước**, còn các nhóm khác nên chuẩn hóa cách tiếp nhận, gom ticket trùng pattern và chuyển đúng đội xử lý.
 
 ---
 
-## 2. Nguồn data và cách đếm
+## 2. Cách đọc và xử lý dữ liệu
 
-- File: `Phiếu hỗ trợ (helpdesk.ticket).xlsx`
-- Export có thể có nhiều dòng cho một ticket (tách theo thẻ / dòng nhóm stage)
-- Trước khi thống kê: gom theo cột **`Trình tự ID phiếu hỗ trợ`**
-- Kết quả: **18 ticket duy nhất**
-- Phân loại: đọc **tiêu đề + thẻ**, gán vào nhóm vấn đề
+File export Odoo có thể có nhiều dòng cho cùng một ticket do tag, stage hoặc dữ liệu liên quan được export thành nhiều dòng. Vì vậy trước khi phân tích, em không đếm số dòng Excel mà đếm theo **ticket ID duy nhất**.
 
-Đây là data luyện tập trên Odoo training. Dùng để có bằng chứng số liệu trong homework, không dùng để kết luận volume cả tháng production.
+Các bước xử lý:
 
----
+1. Gom các dòng có cùng `Trình tự ID phiếu hỗ trợ`.
+2. Đọc title và tag để xác định nhóm vấn đề.
+3. Kiểm tra các ticket có nội dung giống nhau để nhận diện pattern lặp hoặc cùng một incident.
+4. Đánh giá từng nhóm theo 3 tiêu chí: volume, mức độ lặp của quy trình support, và rủi ro khi automation có side effect.
 
-## 3. Phân bố ticket theo nhóm
-
-| Nhóm                         |  Số |   % | Ticket ID                                                            | Cách nhận diện trên data                                             |
-| ---------------------------- | --: | --: | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Tài khoản LMS / login        |  10 | 56% | 00003, 00011, 00012, 00014, 00016, 00019, 00020, 00021, 00022, 00023 | Title chứa login / đăng nhập / ko login; nhiều ticket có thẻ `LMS`   |
-| LMS chạy kém / lỗi hệ thống  |   5 | 28% | 00004, 00005, 00007, 00008, 00009                                    | Performance class; submission DOWN; video playback cùng lesson/class |
-| Yêu cầu tính năng            |   1 |  6% | 00006                                                                | Feature request báo cáo PDF                                          |
-| Công việc nội bộ có hạn chót |   1 |  6% | 00010                                                                | Enrollment report, fixed deadline                                    |
-| Khác — tải tài liệu          |   1 |  6% | 00013                                                                | Không tải được tài liệu bài học                                      |
-
-### Đọc nhanh
-
-1. **Login là nhóm lớn nhất về số ticket.**
-2. **Nhóm hệ thống (5 ticket)** gồm chậm LMS, nộp bài sập, và 3 ticket video cùng một pattern nội dung.
-3. Feature / deadline / tải tài liệu mỗi nhóm chỉ 1 ticket trên dataset này.
+Data này là dữ liệu luyện tập trên Odoo training, nên chỉ dùng để chứng minh cách phân tích và cách chọn bài toán automation trong homework. Không dùng nó để kết luận volume thật của production trong cả tháng.
 
 ---
 
-## 4. Nhìn từng nhóm trên data
+## 3. Tổng quan phân bố ticket
 
-### 4.1 Login / tài khoản LMS — 10 ticket (~56%)
+| Nhóm vấn đề | Số ticket | Tỷ lệ | Ticket ID | Nhận xét nhanh |
+| --- | ---: | ---: | --- | --- |
+| Tài khoản LMS / không đăng nhập được | 10 | 56% | 00003, 00011, 00012, 00014, 00016, 00019, 00020, 00021, 00022, 00023 | Nhóm lớn nhất, wording khác nhau nhưng cùng bài toán login/account |
+| LMS chạy kém / lỗi hệ thống | 5 | 28% | 00004, 00005, 00007, 00008, 00009 | Có dấu hiệu ảnh hưởng nhiều user hoặc nhiều ticket cùng một pattern |
+| Yêu cầu tính năng | 1 | 6% | 00006 | Cần Product đánh giá, không phải case auto support |
+| Công việc nội bộ có hạn chót | 1 | 6% | 00010 | Cần làm rõ scope và người có quyền xử lý |
+| Khác: tải tài liệu | 1 | 6% | 00013 | Case đơn lẻ, nên xử lý theo SOP quyền/file trước |
 
-Title điển hình: `LMS Login Issue`, `không đăng nhập được`, `ko login dc`, `login lỗi`, `Login hỏng`…
+```mermaid
+pie title Phân bố ticket theo nhóm (18)
+  "Tài khoản LMS / login" : 10
+  "LMS chạy kém / lỗi hệ thống" : 5
+  "Yêu cầu tính năng" : 1
+  "Công việc nội bộ có hạn chót" : 1
+  "Khác - tải tài liệu" : 1
+```
 
-- Phần lớn có thẻ `LMS`
-- Một số ticket không có thẻ (00019, 00023) nhưng title vẫn rõ là login
-- Mỗi ticket thường ảnh hưởng 1 user, nhưng **số lượng ticket cao** nên tốn thời gian support lặp lại
-
-**Hướng xử lý:** check HR + trạng thái LMS → reactive nếu đủ điều kiện, hoặc review nếu không chắc.  
-**Có nên auto?** Có — ưu tiên trên data này.
-
-### 4.2 LMS chạy kém / lỗi hệ thống — 5 ticket (~28%)
-
-Gồm:
-
-- 00004 — performance, title ghi ~15 users trong class
-- 00005 — submission system DOWN, 50+ users, mức độ khẩn cấp
-- 00007, 00008, 00009 — video playback cùng Lesson 3 / class `JS-ADV-HN-2412` (~12 users); hai phiếu có chữ “(sao chép)” → cùng một sự cố được tạo nhiều ticket
-
-**Hướng xử lý:** xác định phạm vi ảnh hưởng, gom ticket cùng pattern, cập nhật chung, escalate Dev nếu là lỗi hệ thống/content.  
-**Có nên auto-resolve?** Chưa. Khác login: không có chuỗi check account cố định để bot tự sửa.
-
-### 4.3 Yêu cầu tính năng — 1 ticket (~6%)
-
-00006 — xin báo cáo PDF tiến độ gửi phụ huynh.
-
-**Hướng xử lý:** ghi nhận, chuyển Product.  
-**Auto-resolve?** Không.
-
-### 4.4 Công việc nội bộ có hạn chót — 1 ticket (~6%)
-
-00010 — báo cáo cho Director, có deadline.
-
-**Hướng xử lý:** làm rõ scope rồi chuyển người có quyền.  
-**Auto-resolve?** Không.
-
-### 4.5 Khác — tải tài liệu — 1 ticket (~6%)
-
-00013 — không tải được tài liệu bài 5.
-
-**Hướng xử lý:** check quyền/file/assignment.  
-**Auto?** Chưa — volume thấp trên dataset này.
+Điểm đáng chú ý là dataset không chỉ có ticket login. Có nhóm lỗi hệ thống tuy ít ticket hơn nhưng có khả năng ảnh hưởng nhiều người hơn mỗi lần phát sinh. Vì vậy phần chọn automation cần phân biệt rõ giữa **số lượng ticket** và **mức độ phù hợp để auto xử lý**.
 
 ---
 
-## 5. Vì sao chọn login sau khi nhìn data
+## 4. Phân tích từng nhóm
 
-| Tiêu chí                            | Login                          | Nhóm hệ thống trên data               | Feature / deadline / tải tài liệu |
-| ----------------------------------- | ------------------------------ | ------------------------------------- | --------------------------------- |
-| Số ticket                           | 10 (56%)                       | 5 (28%)                               | Mỗi nhóm 1 ticket                 |
-| Tính lặp quy trình support          | Cao (check account/HR lặp lại) | Thấp hơn — mỗi sự cố nguyên nhân khác | Thấp — judgment / clarify         |
-| Khả năng auto trong phạm vi support | Cao nếu đủ điều kiện           | Thấp (thường cần Dev)                 | Thấp                              |
+### 4.1. Tài khoản LMS / không đăng nhập được — 10 ticket
 
-Kết luận từ data: **login vừa nhiều ticket nhất, vừa phù hợp để support tự động hóa các bước kiểm tra/xử lý lặp.**
+Nhóm này gồm các ticket có title như `LMS Login Issue`, `không đăng nhập được`, `ko login dc`, `login lỗi`, `Login hỏng`. Một số ticket có tag `LMS`, một số ticket không có tag rõ nhưng title vẫn đủ tín hiệu để xếp vào nhóm login.
 
-Nhóm hệ thống có thể “nặng” hơn về số người bị ảnh hưởng từng đợt, nhưng không phải bài toán tool support tự resolve ổn định trong homework này.
+Về mặt support, đây là nhóm phù hợp nhất để tự động hóa vì quy trình xử lý có thể chuẩn hóa:
 
----
+- Xác định ticket có phải login issue không.
+- Lấy email hoặc định danh user từ ticket.
+- Kiểm tra user còn active trên HR hay không.
+- Kiểm tra account LMS đang active hay deactivated.
+- Nếu HR active và LMS deactivated thì reactivate, cập nhật ticket và phản hồi.
+- Nếu thiếu dữ liệu hoặc trạng thái không rõ thì chuyển `NEED_REVIEW`.
 
-## 6. Giả định và phương án cho ticket đăng nhập
+Điểm quan trọng: automation không được tự xử lý mọi ticket login. Tool chỉ nên tự chạy ở nhánh đủ điều kiện rõ ràng. Với các case thiếu email, user inactive, không tìm thấy account, hoặc nghi lỗi hệ thống, tool phải dừng an toàn và chuyển người kiểm tra.
 
-Sau khi chọn nhóm login từ data, em tách các nhánh có thể gặp khi xử lý:
-
-### Trường hợp 1 — User còn active, LMS bị deactivate
-
-**Giả định:** Còn hiệu lực nhưng account deactivate.  
-**Phương án:** Check user → check LMS → activate → cập nhật ticket → phản hồi.  
-**Automation:** Có thể tự xử lý.
-
-### Trường hợp 2 — User không còn active
-
-**Giả định:** Đã nghỉ / không active trên HR.  
-**Phương án:** Không tự activate; chuyển support.  
-**Automation:** Không tự quyết.
-
-### Trường hợp 3 — Không tìm thấy tài khoản LMS
-
-**Giả định:** User active nhưng không thấy LMS account.  
-**Phương án:** Kiểm tra lại thông tin; thiếu data thì yêu cầu bổ sung; ngoài phạm vi thì chuyển support.  
-**Automation:** Hỗ trợ kiểm tra / hỏi bổ sung, không tự tạo account nếu chưa đủ rule.
-
-### Trường hợp 4 — Quên mật khẩu
-
-**Giả định:** Account vẫn active.  
-**Phương án:** Gửi hướng dẫn reset.  
-**Automation:** Có thể tự phản hồi hướng dẫn.
-
-### Trường hợp 5 — Chưa có tài liệu hướng dẫn
-
-**Giả định:** Cần hướng dẫn nhưng KB/docs chưa có.  
-**Phương án:** Bổ sung tài liệu trước; sau đó automation mới dùng được để gửi lại.  
-**Automation:** Người viết docs; máy có thể gửi sau khi đã có.
-
-### Trường hợp 6 — Đã có tài liệu nhưng user vẫn không được
-
-**Giả định:** Đã gửi hướng dẫn mà vẫn fail.  
-**Phương án:** Automation reply kèm tài liệu + bước kiểm tra cơ bản; vẫn không xong thì chuyển support.  
-**Automation:** Có thể tự reply kèm tài liệu.
-
-### Trường hợp 7 — Ticket thiếu thông tin
-
-**Giả định:** Chỉ ghi “không login được”, thiếu email/định danh.  
-**Phương án:** Không đổi account; yêu cầu bổ sung thông tin.  
-**Automation:** Có thể tự yêu cầu bổ sung; không side effect.
+**Kết luận nhóm:** ưu tiên làm tool vì vừa nhiều ticket nhất, vừa có workflow lặp, vừa có thể đặt guardrail rõ.
 
 ---
 
-## 7. Phạm vi automation (từ các giả định trên)
+### 4.2. LMS chạy kém / lỗi hệ thống — 5 ticket
 
-| Điều kiện / tình huống                         | Phương án                    | Automation        |
-| ---------------------------------------------- | ---------------------------- | ----------------- |
-| User active + LMS deactivate                   | Activate tài khoản           | Có                |
-| User inactive                                  | Chuyển support               | Không             |
-| Không tìm thấy LMS account                     | Kiểm tra / bổ sung thông tin | Một phần          |
-| Quên mật khẩu                                  | Gửi hướng dẫn                | Có                |
-| Chưa có tài liệu                               | Bổ sung tài liệu             | Không (cần người) |
-| Có tài liệu nhưng vẫn lỗi                      | Reply kèm tài liệu           | Có                |
-| Ticket thiếu thông tin                         | Yêu cầu bổ sung              | Có                |
-| Không xác định nguyên nhân / nghi lỗi hệ thống | Chuyển support / Dev         | Không             |
+Nhóm này gồm:
 
-Nguyên tắc: **đủ dữ liệu + điều kiện rõ → auto; thiếu data / rủi ro → người xử lý.**
+- `00004`: LMS performance issue, title thể hiện khoảng 15 users trong class bị ảnh hưởng.
+- `00005`: submission system down, title thể hiện 50+ users và mức độ khẩn cấp.
+- `00007`, `00008`, `00009`: lỗi video playback cùng Lesson 3 / class `JS-ADV-HN-2412`; có ticket ghi `(sao chép)`, cho thấy nhiều ticket có thể đến từ cùng một sự cố.
 
----
+Nhóm này có số ticket thấp hơn login, nhưng mức độ ảnh hưởng theo người dùng có thể cao hơn. Ví dụ một ticket hệ thống có thể ảnh hưởng 15 hoặc 50+ users, trong khi một ticket login thường chỉ ảnh hưởng một account.
 
-## 8. Làm tool hay chờ sửa gốc?
+Vì vậy hướng xử lý đúng không phải là auto-resolve từng ticket, mà là:
 
-Nếu LMS tự deactivate account sau thời gian không dùng, đó có thể là rule hệ thống chứ không hẳn bug.
+- Xác định phạm vi ảnh hưởng: một user, một lớp, một lesson hay toàn hệ thống.
+- Gom các ticket có cùng pattern thành một incident chung.
+- Cập nhật cùng một thông tin trạng thái cho các ticket liên quan.
+- Escalate Dev/Product nếu nguyên nhân nằm ở hệ thống, content hoặc hạ tầng.
 
-Đổi rule cần Product/Dev và mất thời gian; support vẫn phải xử lý ticket hằng ngày.  
-Vì vậy em làm tool trước để giảm thao tác lặp trên nhóm login — đúng nhóm đang chiếm **56%** ticket trong export.
-
-Về lâu dài vẫn có thể xem nguyên nhân gốc (nhắc trước khi khóa, bổ sung docs, xem lại rule).  
-**Tool giảm việc hiện tại, không thay sửa gốc.**
+**Kết luận nhóm:** quan trọng về impact, nhưng không phù hợp để tool support tự sửa. Automation nếu có chỉ nên hỗ trợ phát hiện pattern, gom ticket và tạo note/escalation.
 
 ---
 
-## 9. Phương án ngắn cho nhóm không chọn auto trước
+### 4.3. Yêu cầu tính năng — 1 ticket
 
-- **LMS chạy kém / lỗi hệ thống:** gom ticket cùng pattern, cập nhật chung, escalate Dev; không auto-sửa hệ thống.
-- **Yêu cầu tính năng:** ghi nhận đủ → Product; không hứa deadline.
-- **Báo cáo có hạn chót:** clarify scope → chuyển người có quyền; không để máy tự xuất báo cáo.
-- **Tải tài liệu:** SOP quyền/file; theo dõi nếu volume tăng.
+Ticket `00006` là yêu cầu báo cáo PDF tiến độ gửi phụ huynh. Đây không phải lỗi vận hành lặp lại, mà là yêu cầu thay đổi sản phẩm hoặc bổ sung tính năng.
+
+Hướng xử lý phù hợp là ghi nhận đủ bối cảnh, làm rõ người dùng cần báo cáo gì, tần suất nào, format nào, rồi chuyển Product đánh giá. Support không nên hứa deadline hoặc để automation tự tạo cam kết.
+
+**Kết luận nhóm:** không chọn auto-resolve.
 
 ---
 
-## 10. Tổng kết
+### 4.4. Công việc nội bộ có hạn chót — 1 ticket
 
-Từ file Excel Helpdesk:
+Ticket `00010` liên quan đến enrollment report cho Director và có deadline. Đây là ticket có yếu tố deadline và quyền truy cập dữ liệu.
 
-- **18 ticket** sau khi gom ID
-- **Login = 10/18 (~56%)** — nhóm nhiều nhất
-- Hệ thống / performance / video = **5/18 (~28%)**
-- Các nhóm còn lại mỗi nhóm 1 ticket
+Hướng xử lý phù hợp là clarify scope: cần report trường nào, kỳ nào, người nhận là ai, deadline cụ thể, và ai có quyền xuất dữ liệu. Automation không nên tự xuất hoặc gửi báo cáo nếu chưa có rule về quyền dữ liệu.
 
-Em chọn làm tool cho **không đăng nhập được LMS** vì data cho thấy đây là nhóm volume cao và quy trình support tự động hóa được.
+**Kết luận nhóm:** không chọn auto-resolve; có thể dùng checklist để hỗ trợ thu thập thông tin.
 
-Khi triển khai, automation chỉ chạy ở nhánh đủ điều kiện; thiếu docs thì bổ sung tài liệu; thiếu thông tin thì hỏi bổ sung; không chắc thì chuyển người.
+---
 
-Evidence: `Phiếu hỗ trợ (helpdesk.ticket).xlsx` · Tool: `week-5/odoo-automation`
+### 4.5. Khác: không tải được tài liệu — 1 ticket
+
+Ticket `00013` là lỗi không tải được tài liệu bài học. Đây là case đơn lẻ trong dataset hiện tại.
+
+Hướng xử lý phù hợp là kiểm tra quyền truy cập, file có tồn tại không, user có được assign vào course/class không, và lỗi xảy ra trên file nào. Nếu nhóm này tăng volume trong tương lai thì có thể viết SOP hoặc checklist riêng.
+
+**Kết luận nhóm:** chưa đủ volume để ưu tiên automation ở Week 5.
+
+---
+
+## 5. Vì sao chọn login thay vì nhóm khác?
+
+Không phải nhóm có nhiều ticket nhất luôn là nhóm nên tự động hóa trước. Một nhóm chỉ phù hợp để auto khi có đủ 3 yếu tố: volume đủ lớn, quy trình xử lý lặp, và rủi ro side effect thấp hoặc kiểm soát được.
+
+| Tiêu chí | Login LMS | Lỗi hệ thống LMS | Feature / deadline / tải tài liệu |
+| --- | --- | --- | --- |
+| Volume trong dataset | Cao nhất: 10/18 | Thứ hai: 5/18 | Thấp: mỗi nhóm 1 ticket |
+| Quy trình support | Lặp lại, có thể viết rule | Mỗi sự cố có nguyên nhân khác nhau | Cần judgment hoặc clarify |
+| Dữ liệu cần kiểm tra | Email, HR status, LMS status | Log, content, hạ tầng, phạm vi ảnh hưởng | Scope, quyền, yêu cầu nghiệp vụ |
+| Rủi ro khi auto sai | Có thể kiểm soát bằng guardrail | Cao, có thể che mất sự cố thật | Cao hoặc không phù hợp |
+| Phù hợp làm tool Week 5 | Có | Chưa auto-resolve, chỉ hỗ trợ gom/escalate | Không ưu tiên |
+
+Từ bảng trên, login LMS là lựa chọn hợp lý nhất cho homework vì nó vừa có số lượng cao, vừa biến được thành workflow rõ ràng:
+
+`nhận diện login ticket -> kiểm tra dữ liệu -> quyết định AUTO_RESOLVE / NEED_REVIEW / SKIP`.
+
+---
+
+## 6. Giả định xử lý cho ticket login
+
+Sau khi chọn nhóm login, em tách các nhánh xử lý để tránh việc tool auto quá tay.
+
+### Trường hợp 1: HR active, LMS deactivated
+
+**Giả định:** User vẫn còn hiệu lực nhưng account LMS bị deactivate.  
+**Cách xử lý:** Reactivate LMS account, cập nhật ticket, ghi note và phản hồi user.  
+**Automation:** Có thể `AUTO_RESOLVE`.
+
+### Trường hợp 2: HR inactive
+
+**Giả định:** User đã nghỉ hoặc không còn active trên hệ thống nhân sự.  
+**Cách xử lý:** Không tự bật lại LMS; chuyển support kiểm tra quyền truy cập.  
+**Automation:** Không auto-resolve, chuyển `NEED_REVIEW`.
+
+### Trường hợp 3: Không tìm thấy LMS account
+
+**Giả định:** Có thể sai email, thiếu thông tin, hoặc account chưa được tạo.  
+**Cách xử lý:** Yêu cầu bổ sung thông tin hoặc chuyển support kiểm tra.  
+**Automation:** Chỉ hỗ trợ kiểm tra và ghi note; không tự tạo account nếu chưa có rule.
+
+### Trường hợp 4: Quên mật khẩu
+
+**Giả định:** Account vẫn tồn tại và active, user chỉ cần reset password.  
+**Cách xử lý:** Gửi hướng dẫn reset password hoặc link tài liệu.  
+**Automation:** Có thể tự phản hồi nếu có template/KB chính xác.
+
+### Trường hợp 5: Chưa có tài liệu hướng dẫn
+
+**Giả định:** Support cần gửi hướng dẫn nhưng KB chưa có SOP/template.  
+**Cách xử lý:** Người phụ trách bổ sung tài liệu trước. Sau đó tool mới có thể dùng template để trả lời.  
+**Automation:** Chưa tự xử lý được.
+
+### Trường hợp 6: Đã gửi hướng dẫn nhưng user vẫn không login được
+
+**Giả định:** Lỗi không nằm ở việc user thiếu hướng dẫn, có thể là account hoặc hệ thống.  
+**Cách xử lý:** Tool ghi nhận đã gửi hướng dẫn, kiểm tra thêm trạng thái account nếu có dữ liệu, rồi chuyển support nếu vẫn fail.  
+**Automation:** Một phần; không cố resolve nếu không đủ bằng chứng.
+
+### Trường hợp 7: Ticket thiếu email hoặc định danh user
+
+**Giả định:** Ticket chỉ ghi chung chung như “không login được”.  
+**Cách xử lý:** Yêu cầu bổ sung email/mã user trước khi kiểm tra account.  
+**Automation:** Có thể tự hỏi bổ sung, nhưng không có side effect lên account.
+
+---
+
+## 7. Phạm vi tool Week 5
+
+Tool `week-5/odoo-automation` nên giữ phạm vi hẹp và an toàn:
+
+- Quét ticket ở stage intake hoặc nhận ticket qua webhook.
+- Nhận diện login issue bằng tag/title/description.
+- Trích xuất email hợp lệ từ ticket.
+- Kiểm tra HR mock và LMS mock.
+- Chỉ auto-resolve khi `HR = active` và `LMS = deactivated`.
+- Với các case khác, ghi note nội bộ và chuyển `NEED_REVIEW` hoặc `SKIP`.
+
+| Điều kiện | Quyết định | Lý do |
+| --- | --- | --- |
+| Không phải ticket login | `SKIP` | Không xử lý ngoài phạm vi |
+| Login nhưng thiếu email | `SKIP` hoặc yêu cầu bổ sung | Không đủ định danh user |
+| HR active + LMS deactivated | `AUTO_RESOLVE` | Điều kiện rõ, side effect hợp lý |
+| HR inactive | `NEED_REVIEW` | Không tự cấp quyền cho user không active |
+| Không tìm thấy LMS account | `NEED_REVIEW` | Có thể cần tạo account hoặc sửa dữ liệu |
+| Nghi lỗi hệ thống | `NEED_REVIEW` / escalate Dev | Không phải case account đơn lẻ |
+
+Nguyên tắc vận hành: **đủ dữ liệu và rule rõ thì tự xử lý; thiếu dữ liệu hoặc rủi ro quyền truy cập thì dừng an toàn.**
+
+---
+
+## 8. Tool hay sửa nguyên nhân gốc?
+
+Nếu nhiều user bị deactivate LMS vì một rule hệ thống, có thể đặt câu hỏi: nên làm tool support hay sửa rule gốc?
+
+Trong thực tế, hai hướng này không loại trừ nhau:
+
+- **Ngắn hạn:** support vẫn nhận ticket hằng ngày, nên tool giúp giảm thao tác lặp cho nhóm login đang chiếm 56% data.
+- **Dài hạn:** Product/Dev có thể kiểm tra lại rule deactivate, thêm cảnh báo trước khi khóa, bổ sung hướng dẫn reset password, hoặc cải thiện luồng tự phục vụ.
+
+Vì vậy tool Week 5 nên được hiểu là giải pháp vận hành để giảm tải hiện tại, không phải kết luận rằng nguyên nhân gốc đã được xử lý.
+
+---
+
+## 9. Hướng xử lý cho nhóm không chọn automation trước
+
+### LMS chạy kém / lỗi hệ thống
+
+Gom ticket cùng pattern, cập nhật chung và escalate Dev/Product. Nếu nhiều ticket cùng lesson/class/thời điểm, nên xem là một incident chung thay vì xử lý như các ticket rời rạc.
+
+### Feature request
+
+Ghi nhận yêu cầu, làm rõ use case và chuyển Product. Không auto hứa deadline hoặc tự thay đổi scope sản phẩm.
+
+### Báo cáo nội bộ có deadline
+
+Clarify thông tin cần xuất, deadline, người nhận, quyền dữ liệu và người chịu trách nhiệm. Automation chỉ nên hỗ trợ checklist, không tự gửi dữ liệu nhạy cảm.
+
+### Tải tài liệu
+
+Kiểm tra quyền truy cập, file, course/class assignment. Theo dõi thêm volume; nếu xuất hiện nhiều lần thì viết SOP riêng.
+
+---
+
+## 10. Kết luận
+
+Từ export Helpdesk Odoo, sau khi gom ID có **18 ticket duy nhất**. Nhóm **tài khoản LMS / không đăng nhập được** chiếm **10/18 ticket (~56%)**, là nhóm lớn nhất và có quy trình support lặp lại nhất.
+
+Nhóm **LMS chạy kém / lỗi hệ thống** có **5/18 ticket (~28%)** và có thể ảnh hưởng nhiều user hơn trong từng sự cố, nhưng không phù hợp để auto-resolve vì cần kiểm tra nguyên nhân hệ thống. Các nhóm còn lại chỉ có 1 ticket, chưa đủ volume hoặc không phù hợp để tự động hóa.
+
+Vì vậy, lựa chọn hợp lý cho Week 5 là làm tool xử lý ticket login LMS với guardrail rõ: chỉ `AUTO_RESOLVE` khi user còn active và account LMS bị deactivate; các trường hợp thiếu dữ liệu, inactive, không tìm thấy account hoặc nghi lỗi hệ thống thì chuyển `NEED_REVIEW`/`SKIP`.
+
+**Evidence:** `Phiếu hỗ trợ (helpdesk.ticket).xlsx`  
+**Tool:** `week-5/odoo-automation`
