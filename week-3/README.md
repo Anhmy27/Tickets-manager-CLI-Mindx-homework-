@@ -11,7 +11,7 @@ Mở rộng CLI với Knowledge Base: mock-first → HTTP client → KB API serv
 | [`kb-api-client/`](./kb-api-client/) | HTTP client gọi KB API |
 | [`kb-api-server/`](./kb-api-server/) | KB API server (listen local, lưu `data/`) |
 | [`research/ai-summary.md`](./research/ai-summary.md) | Tóm tắt quá trình làm việc với AI tuần 3 |
-| [`research/text-vs-semantic-search.md`](./research/text-vs-semantic-search.md) | Research thêm: text search vs semantic search |
+| [`research/knowledge-base.md`](./research/knowledge-base.md) | Research: Knowledge Base là gì, tổ chức, search |
 
 Lệnh `kb` nằm trong CLI Week 2: [`../week-2/ticket-manager-cli/`](../week-2/ticket-manager-cli/)
 
