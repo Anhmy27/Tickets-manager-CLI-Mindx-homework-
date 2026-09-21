@@ -26,6 +26,7 @@ Kết quả mong đợi:
 | `list` | Liệt kê ticket, có thể filter theo status, priority, tags |
 | `show <id>` | Xem chi tiết một ticket theo id |
 | `update <id>` | Cập nhật status của ticket |
+| `ui` | Mở bảng điều khiển interactive trong terminal (TUI) |
 | `kb search <query>` | Tìm document KB theo title/content |
 | `kb list --node <path>` | Liệt kê document trong một nhánh KB |
 | `kb retrieve <id>` | Xem đầy đủ một document KB |
@@ -223,6 +224,17 @@ npx tsx src/cli.ts create --title "Bug login" --data-file ./tmp/tickets.json
 ```
 
 Tính năng này hữu ích khi test hoặc muốn chạy thử mà không ghi vào `data/tickets.json` mặc định.
+
+### Mở bảng điều khiển (TUI)
+
+```bash
+npx tsx src/cli.ts ui
+```
+
+TUI v1 có menu nhanh:
+
+- Tickets: create, list, update status
+- Knowledge Base: search, list theo node, retrieve theo id
 
 ### Knowledge Base (mock + HTTP)
 

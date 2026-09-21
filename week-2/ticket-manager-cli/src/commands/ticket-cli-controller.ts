@@ -20,8 +20,9 @@ import {
   type TicketUseCases,
 } from '../services/ticket-use-cases-contract.js'
 import { JsonTicketRepository } from '../storage/json-ticket-repository.js'
+import { runTicketConsole } from './ticket-tui.js'
 
-type CliCommand = 'create' | 'list' | 'show' | 'update' | undefined | string
+type CliCommand = 'create' | 'list' | 'show' | 'update' | 'ui' | undefined | string
 
 type CliFlagValue = string | true
 type CliFlags = Record<string, CliFlagValue>
@@ -83,9 +84,17 @@ export async function runCli(
         return await handleShow(parsed, ticketUseCases, stdout)
       case 'update':
         return await handleUpdate(parsed, ticketUseCases, stdout)
+      case 'ui': {
+        const kbClient = dependencies.kbClient ?? createKbClientFromEnv()
+        assertKbClient(kbClient)
+        return await runTicketConsole({
+          ticketUseCases,
+          kbClient,
+        })
+      }
       default:
         throw new ValidationError(
-          'Unknown command. Use one of: create, list, show, update, kb'
+          'Unknown command. Use one of: create, list, show, update, kb, ui'
         )
     }
   } catch (error: unknown) {
